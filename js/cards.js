@@ -472,6 +472,60 @@
       yield* this.doAction(pid, o);
     }
   };
+  // Tutte le azioni, anche quelle non disponibili (con il motivo), per mostrarle grigie nell'interfaccia
+  G.actionCatalog = function (pid) {
+    const p = this.pl(pid), R = this.rules, s = this.s;
+    const enabled = this.actionOptions(pid), disabled = [];
+    const no = (kind, label, reason, extra) => disabled.push(Object.assign({ kind, label, reason }, extra || {}));
+    // attacchi
+    for (const slot of ['primary', 'secondary', 'melee', 'fist']) {
+      const st = this.weaponStats(pid, slot); if (!st) continue;
+      if (enabled.some((o) => o.kind === 'attack' && o.slot === slot)) continue;
+      let why;
+      if (this.inShelter(pid)) why = 'Nei rifugi non si attacca';
+      else if (p.turn.slowed) why = 'Rallentato dalla trappola: niente attacchi in questo turno';
+      else if (p.turn.moveOnly) why = 'Soshito: puoi solo muoverti in questo turno';
+      else if (st.ammo < 1) why = 'Senza munizioni';
+      else if (this.attackCost(pid, st) > p.mana) why = `Serve ${this.attackCost(pid, st)} mana (ne hai ${p.mana})`;
+      else why = st.git === 0 ? 'Nessun avversario nella tua tessera' : 'Nessun avversario a tiro in linea retta (o coperto da un corpo/muro)';
+      no('attack', `Attacca con ${st.name}`, why, { slot });
+    }
+    // crafting
+    for (const id of new Set(p.projects)) {
+      if (enabled.some((o) => o.kind === 'craft' && o.proj === id)) continue;
+      const [k] = id.split(':');
+      let why;
+      if (p.mana < R.craftMana) why = `Serve ${R.craftMana} mana`;
+      else if (k === 'mod') why = 'Ti serve un’arma senza mod';
+      else { const c = this.craftCost(pid, id); why = 'Mancano: ' + AE.RES_KEYS.filter((r) => p.cubes[r] < c[r]).map((r) => `${c[r] - p.cubes[r]} ${AE.RES[r].s}`).join(', '); }
+      no('craft', `Crafta ${AE.cardName(id)}`, why, { card: id });
+    }
+    // skill
+    for (const id of new Set(p.skills)) {
+      if (enabled.some((o) => o.kind === 'skill' && o.card === id)) continue;
+      no('skill', `Skill: ${AE.cardName(id)}`, p.mana < R.skillMana ? `Serve ${R.skillMana} mana` : p.turn.moveOnly ? 'Soshito: puoi solo muoverti' : 'Ora non ha effetto utile o non ci sono bersagli', { card: id });
+    }
+    // ulti
+    if (!enabled.some((o) => o.kind === 'ulti')) {
+      const ch = this.charOf(pid);
+      let why;
+      if (p.char === 'miaika') why = 'Si usa da sola quando vieni eliminata';
+      else if (p.char === 'nganga') why = 'Si usa da sola quando subisci un colpo';
+      else if (!p.ultiHeld) why = p.ultiUsed ? 'Già usata: la ripristina solo il Sindaco' : 'Non l’hai ancora raccolta: fermati sulla tua tessera Ulti';
+      else if (p.mana < R.ultiMana) why = `Serve ${R.ultiMana} mana`;
+      else why = 'Nessun bersaglio utile';
+      no('ulti', `ULTI di ${ch.n}`, why);
+    }
+    // mercato
+    if (p.mana < R.buyMana) no('buy', 'Mercato', `Comprare costa ${R.buyMana} mana`);
+    else {
+      const mx = Math.min(R.price.mat[0], R.price.proj[0]);
+      if (p.coins < mx) no('buy', 'Mercato', `Servono almeno ${mx} monete (ne hai ${p.coins})`);
+      if (p.hp >= R.healthCap) no('buyhp', 'Compra 1 PV', 'PV già al massimo'); else if (p.coins < R.hpPrice) no('buyhp', 'Compra 1 PV', `Servono ${R.hpPrice} monete`);
+    }
+    for (const id of new Set(p.heal)) if (!enabled.some((o) => o.kind === 'heal' && o.card === id)) no('heal', `Usa ${AE.cardName(id)}`, p.hp >= R.healthCap ? 'PV già al massimo' : `Serve ${R.healMana} mana`, { card: id });
+    return { enabled, disabled };
+  };
   G.doAction = function* (pid, o) {
     switch (o.kind) {
       case 'attack': yield* this.attack(pid, o); break;

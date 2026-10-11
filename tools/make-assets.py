@@ -27,6 +27,13 @@ tf = files('Mappa')
 assert len(tf) == 61 and sorted(TILE_ORDER) == list(range(1, 62))
 for f, n in zip(tf, TILE_ORDER):
     im = Image.open(f).convert('RGBA'); im.thumbnail((360, 360))
+    # le tessere originali hanno gli angoli bianchi: si ritaglia l'esagono (vertici a sinistra e a destra)
+    from PIL import ImageDraw
+    W, H = im.size
+    mask = Image.new('L', (W * 4, H * 4), 0)
+    ImageDraw.Draw(mask).polygon([(0, H * 2), (W, 0), (W * 3, 0), (W * 4, H * 2), (W * 3, H * 4), (W, H * 4)], fill=255)
+    mask = mask.resize((W, H), Image.LANCZOS)
+    im.putalpha(mask)
     save(im, f'{OUT}/tiles/t{n:02d}.webp', quality=82, method=6)
 for pref, names in CARDS.items():
     fs = files(pref)

@@ -88,9 +88,10 @@
       const cost = this.attackCost(pid, st);
       if (cost > p.mana) continue;
       for (const t of this.targetsFrom(pid, st.git)) {
-        const base = { kind: 'attack', slot, target: t, cost, weapon: st.name };
+        const tn = t.kind === 'trap' ? (this.s.traps.find((x) => x.id === t.id) || {}).kind === 'turret' ? 'la Torretta' : 'la Trappola' : this.pl(t.pid).name;
+        const base = { kind: 'attack', slot, target: t, cost, weapon: st.name, label: `Attacca ${tn} con ${st.name}${t.dist === 0 ? ' (stessa tessera)' : ` (a ${t.dist})`} · ${cost} mana` };
         out.push(Object.assign({}, base, { vant: false }));
-        if (p.specials.includes('sp:vantaggio')) out.push(Object.assign({}, base, { vant: true }));
+        if (p.specials.includes('sp:vantaggio')) out.push(Object.assign({}, base, { vant: true, label: base.label + ' + Vantaggio' }));
       }
     }
     return out;
