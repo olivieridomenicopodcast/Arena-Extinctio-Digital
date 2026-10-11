@@ -92,8 +92,8 @@
       if (N < 2 || N > 6) throw new Error('Servono da 2 a 6 giocatori');
       s.n = N;
       // tessere sulle celle (tutto casuale), i muri hanno anche una rotazione casuale
-      const ids = this._shuffle(AE.TILES.map((t) => t.id));
-      s.cells = CELLS.map((c, i) => { const id = ids[i]; const t = AE.tile(id); return { tile: id, rot: t.type === 'muro' ? this.randInt(6) : 0 }; });
+      const ids = cfg.layout ? cfg.layout.slice() : this._shuffle(AE.TILES.map((t) => t.id));   // cfg.layout: disposizione fissa (test)
+      s.cells = CELLS.map((c, i) => { const id = ids[i]; const t = AE.tile(id); return { tile: id, rot: cfg.layout ? ((cfg.rot && cfg.rot[i]) || 0) : (t.type === 'muro' ? this.randInt(6) : 0) }; });
       s.removedTiles = [];            // tessere uscite dal gioco (per il Sindaco)
       s.removedLevels = 0;
       const decks = AE.buildDecks();
@@ -387,7 +387,7 @@
         const p2 = path || this._findPath(pid, start, target, n, { ghost, canStep, exitsOf, stopOn, immune, hasPortals, avoid: false, budget: budgetMax, isStop });
         if (p2) out.push({ cell: target, path: p2, stop: isStop });
       }
-      if (out.length || n <= 1) return { ends: out, short: false, steps: n };
+      if (out.length || n <= 1 || opts._noShort) return { ends: out, short: false, steps: n };
       // 3) impossibile consumare tutti i passi: il massimo raggiungibile
       for (let k = n - 1; k >= 1; k--) {
         const r = this.movementOptions(pid, k, Object.assign({}, opts, { _noShort: true }));
