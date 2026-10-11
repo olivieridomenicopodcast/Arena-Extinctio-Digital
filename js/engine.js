@@ -121,6 +121,8 @@
           kills: 0,
         };
       });
+      // carte regalate a inizio partita (analisi "carta forzata" del simulatore): cfg.give = { posto: [id, …] }
+      s.rngSetupDone = true;
       // risorse "cratere" sulle tessere Ulti dei giocatori presenti; tessere Ulti senza proprietario restano inerti
       s.crater = {}; for (let i = 0; i < N; i++) s.crater[7 + i] = true;
       s.traps = [];        // {id, kind:'trap'|'turret', tile, owner, hp, marks:[tileId]}
@@ -140,7 +142,22 @@
       s.turnNo = 0; s.cur = 0; s.start = 0; s.over = false; s.winner = null; s.phase = 'setup';
       s.trapSeq = 1; s.limbo = [];
       for (let i = 0; i < N; i++) this.stats.p.push({});
+      if (cfg.give) for (const k in cfg.give) for (const id of cfg.give[k]) this._giveStart(+k, id);
       return s;
+    }
+
+    _giveStart(pid, id) {
+      const s = this.s, p = s.players[pid];
+      const cid = id.startsWith('eq:') ? id.slice(3) : id;
+      const dk = this.deckOfCard(cid), i = s.decks[dk].indexOf(cid);
+      if (i >= 0) s.decks[dk].splice(i, 1);
+      const [k, x] = cid.split(':');
+      if (id.startsWith('eq:')) {
+        if (k === 'w') { const w = AE.WEAPONS[x]; p.weapons[w.slot] = { id: x, ammo: 0, mod: null }; p.weapons[w.slot].ammo = this.weaponStats(pid, w.slot).cap; }
+        else if (k === 'ar') p.armor = { id: x, dur: AE.ARMORS[x].dur };
+        return;
+      }
+      if (k === 'sk') p.skills.push(cid); else if (k === 'sp') p.specials.push(cid); else if (k === 'mat') p.heal.push(cid); else p.projects.push(cid);
     }
 
     // ───────────────────────── utilità ─────────────────────────

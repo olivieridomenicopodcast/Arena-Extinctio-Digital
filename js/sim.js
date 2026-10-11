@@ -16,7 +16,7 @@
   // Gioca una partita completa. opts: { seed, players:[{level, char, name}], rules, stats:true, log:false, maxDecisions }
   Sim.playGame = function (opts) {
     const players = opts.players.map((p, i) => ({ name: p.name || `P${i + 1}`, kind: 'ai', level: p.level, char: p.char }));
-    const g = new AE.Game({ seed: opts.seed, players, rules: opts.rules, log: !!opts.log, stats: opts.stats !== false });
+    const g = new AE.Game({ seed: opts.seed, players, rules: opts.rules, give: opts.give, log: !!opts.log, stats: opts.stats !== false });
     const ais = players.map((p, i) => AE.AI.create(p.level || 'medium', `${opts.seed}:${i}`, opts.params && opts.params[i]));
     const gen = g.run();
     let r = gen.next(), n = 0;
@@ -30,15 +30,28 @@
     return g;
   };
 
+  // tutte le disposizioni distinte dei profili sui posti (per un disegno bilanciato: ogni profilo prova ogni posto e ogni ordine di turno)
+  Sim.arrangements = function (n, k) {
+    const base = []; for (let s = 0; s < n; s++) base.push(s % k);
+    const seen = new Set(), out = [];
+    const rec = (arr, rest) => { if (!rest.length) { const key = arr.join(','); if (!seen.has(key)) { seen.add(key); out.push(arr.slice()); } return; } const used = new Set(); rest.forEach((v, i) => { if (used.has(v)) return; used.add(v); rec(arr.concat(v), rest.slice(0, i).concat(rest.slice(i + 1))); }); };
+    if (n <= 5) rec([], base); 
+    return out;
+  };
+
   // Torneo: `games` partite con N giocatori; `profiles` = array di livelli/parametri, assegnati ai posti a rotazione.
   // opts: { games, n, profiles:[{label, level, params}], seed0, rules, onGame }
   Sim.tournament = function (opts) {
     const N = opts.n || 4, G = opts.games || 100, seed0 = opts.seed0 == null ? 1 : opts.seed0;
     const profs = opts.profiles || [{ label: 'media', level: 'medium' }];
     const out = { n: N, games: 0, profiles: profs.map((p) => ({ label: p.label || p.level, wins: 0, games: 0, kills: 0, damage: 0, hp: 0, rank: [] })), seatWins: Array(N).fill(0), seatGames: Array(N).fill(0), draws: 0, rounds: [], turns: [], why: {}, stats: {}, firstWins: 0, byChar: {}, durations: [] };
+    const arr = Sim.arrangements(N, profs.length);
+    const shuf = AE.makeRng('tour' + seed0);
     for (let i = 0; i < G; i++) {
-      // assegna i profili ai posti ruotando: partita i, posto s → profilo (s + i) % profs.length
-      const assign = [...Array(N)].map((_, s) => (s + i) % profs.length);
+      // disegno bilanciato: si scorrono tutte le disposizioni distinte (per 6 giocatori, disposizioni casuali)
+      let assign;
+      if (arr.length) assign = arr[(i + (opts.offset || 0)) % arr.length];
+      else { assign = [...Array(N)].map((_, s) => s % profs.length); for (let a = N - 1; a > 0; a--) { const b = Math.floor(shuf() * (a + 1)); [assign[a], assign[b]] = [assign[b], assign[a]]; } }
       const players = assign.map((a, s) => ({ level: profs[a].level, char: undefined }));
       const g = Sim.playGame({ seed: seed0 + i, players, rules: opts.rules, params: assign.map((a) => profs[a].params), stats: true });
       const res = g.result || { winner: null, why: 'interrotta', rounds: g.s.round, turns: g.s.turnNo };
@@ -53,6 +66,16 @@
       for (const k in g.stats.g) out.stats[k] = (out.stats[k] || 0) + g.stats.g[k];
       if (opts.onGame) opts.onGame(i, g);
     }
+    return out;
+  };
+
+  // Analisi "carta forzata": il giocatore di prova parte con la carta in più; si misura quanto cambia la sua percentuale di vittoria
+  // rispetto alla media (1/N), tutti gli altri senza regali. Il posto del giocatore di prova ruota. ids: ['sk:colpo', 'eq:w:tua', …]
+  Sim.forced = function (opts) {
+    const N = opts.n || 3, G = opts.games || 60, level = opts.level || 'medium', seed0 = opts.seed0 || 1;
+    const run = (ids) => { let wins = 0, tot = 0; for (let i = 0; i < G; i++) { const seat = i % N; const g = Sim.playGame({ seed: seed0 + i, players: [...Array(N)].map(() => ({ level })), rules: opts.rules, give: ids && ids.length ? { [seat]: ids } : undefined, stats: false }); tot++; if (g.result && g.result.winner === seat) wins++; } return { wins, tot }; };
+    const base = run(null), out = [{ id: '(nessuna: riferimento)', wins: base.wins, tot: base.tot }];
+    for (const id of opts.ids) { const r = run([id]); out.push({ id, wins: r.wins, tot: r.tot }); if (opts.onStep) opts.onStep(id, r); }
     return out;
   };
 

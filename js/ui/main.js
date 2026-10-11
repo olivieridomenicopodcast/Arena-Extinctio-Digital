@@ -7,6 +7,7 @@
   UI.startSession = function (cfg) {
     if (session) session.destroy();
     session = new UI.Session(cfg);
+    UI.session = session;
     session.mount();
     session.start();
   };
@@ -24,7 +25,7 @@
   const LEVELS = [['easy', 'Facile'], ['medium', 'Media'], ['hard', 'Difficile']];
   const RULE_FIELDS = [
     ['hp', 'Punti vita iniziali'], ['mana', 'Slot mana'], ['coinsMax', 'Monete massime'], ['cubeMax', 'Cubetti max per tipo'], ['ultiMana', 'Costo Ulti (mana)'],
-    ['killCoins', 'Monete per eliminazione'], ['luogoCoins', 'Monete su Luogo'], ['rifugioCoins', 'Monete su Rifugio'], ['trapHp', 'PV della trappola/torretta'], ['turretDmg', 'Danni della torretta'], ['punchDamage', 'Danno del pugno'],
+    ['killCoins', 'Monete per eliminazione'], ['luogoCoins', 'Monete su Luogo'], ['rifugioCoins', 'Monete su Rifugio'], ['trapHp', 'PV della trappola/torretta'], ['turretDmg', 'Danni della torretta'], ['punchDamage', 'Danno del pugno'], ['punchMax', 'Pugni max per turno (0 = illimitati)'],
   ];
   UI.RULE_FIELDS = RULE_FIELDS;
 

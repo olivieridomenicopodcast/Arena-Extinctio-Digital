@@ -57,6 +57,7 @@
       const sel = h('select', { title: 'Velocità dei messaggi', onchange: (e) => { this.speed = e.target.value; if (this.beatResolve && this.speed === 'instant') this.advance(); } });
       for (const k in SPEED_NAMES) sel.append(h('option', { value: k, selected: k === this.speed }, '⏱ ' + SPEED_NAMES[k]));
       nav.append(sel);
+      add('📖 Regole', () => UI.rulesModal());
       add('💾 Esporta cronaca', () => this.exportLog());
     }
 
@@ -207,11 +208,22 @@
         if (p.specials.length) { sect('Carte speciali'); row(p.specials.map((id) => cb(id))); }
         if (p.heal.length) { sect('Cura'); row(p.heal.map((id) => cb(id))); }
       }
-      const fx = []; if (p.temp.shield) fx.push(`${icon('armor', 16)} Scudo Solare (${p.temp.shield})`); if (p.temp.mira) fx.push('🎯 Mira Perfetta'); if (p.temp.svantaggio) fx.push('⚠ Svantaggio nel prossimo combattimento'); if (p.temp.fabbro) fx.push('⚒ Sconto Fabbro');
-      if (p.temp.ultiTurn) fx.push('⚡ Ulti di Karou attiva');
-      if (fx.length) box.append(h('div', { class: 'small', style: 'margin-top:8px', html: fx.join('<br>') }));
+      // stati speciali: descritti sempre, anche quando non sono attivi
+      const T = p.temp || {}, slowed = p.turn && p.turn.slowed;
+      const st = [
+        [!!T.shield, `${icon('armor', 16)} Scudo Solare`, T.shield ? `attivo: blocca fino a ${T.shield} danni al primo colpo` : 'non attivo (blocca 3 danni, di notte 2, al primo attacco subito)'],
+        [!!T.mira, '🎯 Mira Perfetta', T.mira ? `attiva: prossimo attacco infallibile, −${T.mira} danni` : 'non attiva (prossimo attacco infallibile ma con meno danni)'],
+        [!!T.svantaggio, '⚠ Svantaggio', T.svantaggio ? 'ATTIVO: nel prossimo combattimento tiri con svantaggio' : 'non attivo'],
+        [!!slowed, '🕸 Rallentato', slowed ? 'sì: in questo turno non puoi attaccare' : 'no (le trappole ti fermano e ti impediscono di attaccare)'],
+        [!!T.fabbro, '⚒ Sconto Fabbro', T.fabbro ? 'attivo sul prossimo crafting' : 'non attivo'],
+        [!!T.ultiTurn, '⚡ Ulti di Karou', T.ultiTurn ? 'attiva fino a fine turno' : 'non attiva'],
+        [!!T.moveOnly, '🚶 Solo movimento', T.moveOnly ? 'nel prossimo turno potrai solo muoverti (Soshito)' : 'no'],
+        [!!T.skipTurn, '😴 Turno saltato', T.skipTurn ? 'salterai il prossimo turno (Soshito)' : 'no'],
+        [!!T.excess, '✨ PV oltre il massimo', T.excess ? 'temporanei: spariscono al prossimo cambio giornata' : 'no'],
+      ];
+      box.append(h('div', { class: 'sect' }, 'Stati speciali'), h('div', { class: 'small', html: st.map(([on, n, d]) => `<div style="opacity:${on ? 1 : 0.55}">${on ? '●' : '○'} <b>${n}</b> — ${esc(d)}</div>`).join('') }));
       const ch = AE.CHARS[AE.CHAR_IDX[p.char]];
-      box.append(h('div', { class: 'sect' }, 'Personaggio'), h('div', { class: 'row' }, UI.cardImg(p.char, {}), h('div', { class: 'small', style: 'flex:1;min-width:150px', html: `<b>${esc(ch.n)}</b> · ${esc(ch.role)}<br><b>Passiva:</b> ${esc(ch.passive)}<br><b>Ulti (${R.ultiMana} mana):</b> ${esc(ch.ulti)}<br>${p.ultiHeld ? '✔ Ulti raccolta' : p.ultiUsed ? '✖ Ulti usata (la ripristina il Sindaco)' : '… Ulti da raccogliere sulla tessera Ulti ' + (p.id + 1)}` })));
+      box.append(h('div', { class: 'sect' }, 'Personaggio'), h('div', { class: 'row' }, UI.charCard(p.char), h('div', { class: 'small', style: 'flex:1;min-width:150px', html: `<b>${esc(ch.n)}</b> · ${esc(ch.role)}<br><b>Passiva:</b> ${esc(ch.passive)}<br><b>Ulti (${R.ultiMana} mana):</b> ${esc(ch.ulti)}<br>${p.ultiHeld ? '✔ Ulti raccolta' : p.ultiUsed ? '✖ Ulti usata (la ripristina il Sindaco)' : '… Ulti da raccogliere sulla tessera Ulti ' + (p.id + 1)}` })));
       return box;
     }
 

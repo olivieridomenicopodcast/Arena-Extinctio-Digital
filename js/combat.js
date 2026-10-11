@@ -85,6 +85,7 @@
     for (const slot of slots) {
       const st = this.weaponStats(pid, slot); if (!st) continue;
       if (st.ammo < 1) continue;
+      if (slot === 'fist' && this.rules.punchMax > 0 && (p.turn.atk.fist || 0) >= this.rules.punchMax) continue;
       const cost = this.attackCost(pid, st);
       if (cost > p.mana) continue;
       for (const t of this.targetsFrom(pid, st.git)) {

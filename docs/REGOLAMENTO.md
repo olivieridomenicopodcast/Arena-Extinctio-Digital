@@ -113,6 +113,7 @@ Con 4 mana una standard fa al massimo 2 attacchi; una avanzata può fare il 2° 
 
 ### 8.4 Pugno
 Gittata 0, danno 1, colpi infiniti, **non costa mana**: se perdi la sfida subisci 1 danno. [chiarito]
+Nel digitale il parametro `punchMax` (0 = illimitati, come da regola) permette di provare un limite di pugni per turno: vedi `docs/DA_RICORDARE.md` per i numeri.
 
 ### 8.5 Armi
 | Arma | Slot | Tipo | Gittata | Danno | Munizioni | Se perdi | Costo crafting | Copie |
@@ -248,6 +249,7 @@ Questi valori stanno in un unico oggetto (`AE.DEFAULT_RULES`); un test controlla
 | turretDmg | 2 |
 | punchDamage | 1 |
 | punchFail | 1 |
+| punchMax | 0 |
 | periodsPerDay | 2 |
 
 Giornate prima di togliere i livelli 5, 4, 3: **5, 4, 3** (parametro `levelDays`).

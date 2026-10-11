@@ -53,6 +53,10 @@
     }
     close(); return out.join('\n');
   };
+  UI.rulesModal = function () {
+    const box = h('div', { class: 'rules' }, h('div', { class: 'row' }, h('button', { class: 'btn small', onclick: () => UI.modal.close() }, '✖ Chiudi')), h('div', { html: UI.md(AE.RULEBOOK_MD || '') }));
+    const m = UI.modal.open(box); m.style.maxWidth = '980px';
+  };
   UI.rulesScreen = function () {
     const el = $('#screen'); el.innerHTML = '';
     const input = h('input', { type: 'text', placeholder: 'Cerca nel regolamento…', style: 'width:100%;max-width:420px', oninput: () => filter() });

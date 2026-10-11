@@ -23,8 +23,7 @@
         const t = { n: N, games: 0, profiles: profiles.map((p) => ({ label: p.label, wins: 0, games: 0, kills: 0 })), seatWins: Array(N).fill(0), seatGames: Array(N).fill(0), draws: 0, rounds: [], turns: [], why: {}, stats: {}, byChar: {} };
         const chunk = 4;
         for (let done = 0; done < G && !cancel; done += chunk) {
-          const part = AE.Sim.tournament({ games: Math.min(chunk, G - done), n: N, profiles, seed0: +seed.value + done, rules });
-          // il torneo ruota i profili a partire dall'indice di partita: per mantenere la rotazione corretta si somma il risultato
+          const part = AE.Sim.tournament({ games: Math.min(chunk, G - done), n: N, profiles, seed0: +seed.value + done, offset: done, rules });
           t.games += part.games; t.draws += part.draws; t.rounds.push(...part.rounds); t.turns.push(...part.turns);
           part.profiles.forEach((p, i) => { t.profiles[i].wins += p.wins; t.profiles[i].games += p.games; t.profiles[i].kills += p.kills; });
           part.seatWins.forEach((w, i) => { t.seatWins[i] += w; t.seatGames[i] += part.seatGames[i]; });

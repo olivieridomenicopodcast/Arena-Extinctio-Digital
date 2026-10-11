@@ -17,7 +17,7 @@
   UI.modal = {
     open(html, opts) {
       opts = opts || {};
-      const bg = UI.$('#modalBg'), m = UI.$('#modal');
+      const bg = UI.$('#modalBg'), m = UI.$('#modal'); m.style.maxWidth = '';
       m.innerHTML = ''; if (typeof html === 'string') m.innerHTML = html; else m.append(html);
       bg.style.display = 'flex'; bg.dataset.lock = opts.lock ? '1' : '';
       return m;
@@ -35,6 +35,7 @@
     img.addEventListener('click', (e) => { e.stopPropagation(); UI.zoom(src); });
     return img;
   };
+  UI.charCard = (cid) => { const src = UI.charImg(cid); const img = UI.h('img', { class: 'cardimg', src, alt: cid, style: 'width:104px', title: 'Tocca per ingrandire' }); img.addEventListener('click', (e) => { e.stopPropagation(); UI.zoom(src); }); return img; };
   UI.download = (name, text, mime) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: mime || 'text/plain' })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
   UI.charImg = (cid) => `assets/cards/${cid}.webp`;
   UI.col = (i) => AE.PLAYER_COLORS[i % AE.PLAYER_COLORS.length];

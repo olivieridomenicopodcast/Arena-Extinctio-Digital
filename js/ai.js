@@ -15,8 +15,13 @@
 
   AI.PARAMS = {
     easy: { random: 0.55, noise: 2.5, samples: 0, plan: 0, thr: 0.8, aggr: 0.7, shelter: 0.3 },
-    medium: { random: 0.08, noise: 0.9, samples: 0, plan: 1, thr: 0.3, aggr: 1.0, shelter: 0.8 },
-    hard: { random: 0, noise: 0.15, samples: 3, plan: 2, thr: 0.2, aggr: 1.1, shelter: 1.0 },
+    medium: { random: 0.08, noise: 0.9, samples: 0, plan: 1, thr: 0.1, aggr: 1.0, shelter: 0.8 },
+    hard: { random: 0, noise: 0.15, samples: 3, plan: 2, thr: 0.05, aggr: 1.1, shelter: 1.0 },
+    // profili "estremi" per le prove: strategie sbagliate di proposito, devono perdere
+    pacifist: { random: 0.05, noise: 0.5, samples: 0, plan: 1, thr: 0.3, aggr: 1.0, shelter: 0.8, noAttack: true },
+    camper: { random: 0.05, noise: 0.5, samples: 0, plan: 1, thr: 0.3, aggr: 0.6, shelter: 0.8, camp: true },
+    rusher: { random: 0, noise: 0.5, samples: 0, plan: 1, thr: -9, aggr: 3.0, shelter: 0, rush: true },
+    random: { random: 1, noise: 5, samples: 0, plan: 0, thr: 0.8, aggr: 1.0, shelter: 0 },
   };
 
   // probabilità che la somma dell'attaccante sia ≥ a quella del difensore (pareggio all'attaccante) con i vari modi di tiro
@@ -185,7 +190,9 @@
       const p = g.pl(pid), s = g.s;
       const tid = s.cells[o.cell].tile;
       let v = AI.tileValue(g, pid, tid);
-      v -= AI.threatAt(g, pid, o.cell) * (level === 'easy' ? 0.3 : 1.2);
+      if (P.camp && AE.tile(tid).type === 'rifugio') v += 6;
+      if (P.rush) { let near = 99; for (const q of s.players) if (q.id !== pid && q.status === 'alive') near = Math.min(near, dq(g, o.cell, q)); v += (8 - near) * 0.8; }
+      v -= AI.threatAt(g, pid, o.cell) * (P.rush ? 0 : level === 'easy' ? 0.3 : 1.2);
       v -= AI.levelRisk(g, o.cell) * (level === 'easy' ? 0.5 : 1);
       // hazard del percorso già evitati dal motore; ma una tessera segnalata ferma
       if (o.stop) v -= 1.2;
@@ -247,8 +254,8 @@
           const armorAbs = q.armor ? AE.ARMORS[q.armor.id].dif : 0; dmg = Math.max(0, dmg - (q.temp.shield ? Math.min(q.temp.shield, dmg) : 0) - armorAbs * 0.8);
           let gain = dmg * pw;
           if (st.dan >= q.hp && dmg >= q.hp) gain += pw * (5 + R.killCoins * 0.4);    // eliminazione
-          const loss = (1 - pw) * (st.fal || 0) * 1.1 + (st.slot === 'fist' ? (1 - pw) * 0.8 : 0);
-          const cost = o.cost * 0.35 + (o.slot === 'fist' ? 0 : 0.25) + (o.vant ? 0.9 : 0);
+          const loss = (1 - pw) * (st.fal || 0) * 1.1;
+          const cost = o.cost * 0.15 + (o.slot === 'fist' ? 0 : 0.2) + (o.vant ? 0.9 : 0);
           // se è una sfida contro un avversario forte è meglio scegliere il bersaglio più debole
           return (gain - loss) * P.aggr - cost + (q.hp <= 3 ? 0.5 : 0);
         }
@@ -328,7 +335,7 @@
 
     function decideAction(g, dec) {
       const pid = dec.pid, p = g.pl(pid);
-      const sc = dec.options.map((o, i) => (o.kind === 'end' ? P.thr : scoreAction(g, pid, o) + noise()));
+      const sc = dec.options.map((o, i) => (o.kind === 'end' ? P.thr : (P.noAttack && (o.kind === 'attack' || o.kind === 'ulti') ? -9 : scoreAction(g, pid, o) + noise())));
       let best = -1, bs = -1e9;
       sc.forEach((v, i) => { if (v > bs) { bs = v; best = i; } });
       if (dec.options[best].kind === 'end') return best;
@@ -354,7 +361,7 @@
       const base = (() => { let tot = 0; for (let k = 0; k < P.samples; k++) { const g2 = AI.determinize(g, pid, AE.makeRng(Math.floor(rng() * 1e9))); tot += AI.evalState(g2, pid); } return tot / P.samples; })();
       let best = idxs[0], bv = -1e9;
       for (const i of idxs) { let tot = 0; for (let k = 0; k < P.samples; k++) tot += simulateChoice(g, pid, dec, i); const v = tot / P.samples; if (v > bv) { bv = v; best = i; } }
-      if (bv < base - 0.3) return dec.options.length - 1;    // nessun attacco migliora la posizione: meglio fermarsi
+      if (bv < base - 1.2) return dec.options.length - 1;    // nessun attacco migliora la posizione: meglio fermarsi
       return best;
     }
     // scelta rapida per le sotto-decisioni dentro le simulazioni

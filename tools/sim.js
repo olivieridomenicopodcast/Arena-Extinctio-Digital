@@ -14,6 +14,20 @@ if (arg('c', null)) profiles.push({ label: arg('c'), level: arg('c') });
 const run = (rules, title) => { const t0 = Date.now(); const t = AE.Sim.tournament({ games, n, profiles, seed0, rules }); t.secs = (Date.now() - t0) / 1000; return t; };
 const out = [];
 const exp = arg('experiment', null);
+const eff = arg('effects', null);
+if (eff) {
+  const G = Number(eff) || 60, level = arg('a', 'medium');
+  const ids = [];
+  for (const k in AE.SKILLS) ids.push('sk:' + k);
+  for (const k of ['vantaggio', 'zaino', 'sfera']) ids.push('sp:' + k);
+  for (const k in AE.WEAPONS) if (AE.WEAPONS[k].deck === 'proj') ids.push('eq:w:' + k);
+  for (const k in AE.ARMORS) ids.push('eq:ar:' + k);
+  for (const k of ['mat:medikit', 'mat:food']) ids.push(k);
+  const rows = AE.Sim.forced({ ids, games: G, n, level, seed0 });
+  out.push(`# Carte forzate (livello ${level}, ${n} giocatori, ${G} partite per carta)`, '', 'Il giocatore di prova parte con la carta (Skill in mano, armi/armature già equipaggiate). Atteso senza regali: ' + (100 / n).toFixed(1) + '%.', '', '| carta | vittorie | % | IC 95% | differenza dal riferimento |', '|---|---|---|---|---|');
+  const base = rows[0].wins / rows[0].tot;
+  for (const r of rows) { const [p, lo, hi] = AE.Sim.wilson(r.wins, r.tot); out.push(`| ${r.id.startsWith('(') ? r.id : AE.cardName(r.id.replace(/^eq:/, ''))} | ${r.wins}/${r.tot} | ${(100 * p).toFixed(1)}% | ${(100 * lo).toFixed(0)}–${(100 * hi).toFixed(0)}% | ${r === rows[0] ? '—' : ((100 * (p - base)) >= 0 ? '+' : '') + (100 * (p - base)).toFixed(1) + ' pt'} |`); }
+} else
 if (exp) {
   const [key, vals] = exp.split('='); const list = vals.split(',').map((v) => (isNaN(Number(v)) ? v : Number(v)));
   out.push(`# Esperimento: ${key} = ${list.join(' / ')}`, '', `${games} partite per valore, ${n} giocatori, profili: ${profiles.map((p) => p.label).join(' vs ')}`, '', '| valore | round medi (mediana) | primo posto % | ' + profiles.map((p) => p.label + ' %').join(' | ') + ' |', '|---|---|---|' + profiles.map(() => '---|').join(''));

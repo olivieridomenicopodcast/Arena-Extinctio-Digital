@@ -486,6 +486,7 @@
       else if (p.turn.slowed) why = 'Rallentato dalla trappola: niente attacchi in questo turno';
       else if (p.turn.moveOnly) why = 'Soshito: puoi solo muoverti in questo turno';
       else if (st.ammo < 1) why = 'Senza munizioni';
+      else if (slot === 'fist' && R.punchMax > 0 && (p.turn.atk.fist || 0) >= R.punchMax) why = `Limite di ${R.punchMax} pugni per turno raggiunto`;
       else if (this.attackCost(pid, st) > p.mana) why = `Serve ${this.attackCost(pid, st)} mana (ne hai ${p.mana})`;
       else why = st.git === 0 ? 'Nessun avversario nella tua tessera' : 'Nessun avversario a tiro in linea retta (o coperto da un corpo/muro)';
       no('attack', `Attacca con ${st.name}`, why, { slot });

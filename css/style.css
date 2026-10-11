@@ -90,7 +90,7 @@ label{display:flex;gap:8px;align-items:center}
 .log .t-kill,.log .t-damage{color:#ff9aa9}
 .log .t-note{color:var(--gold)}
 #modalBg{position:fixed;inset:0;background:#000b;display:none;z-index:100;align-items:center;justify-content:center;padding:12px}
-#modal{background:var(--panel);border:2px solid var(--neon);border-radius:14px;max-width:640px;width:100%;max-height:90vh;overflow:auto;padding:16px}
+#modal{margin:auto;background:var(--panel);border:2px solid var(--neon);border-radius:14px;max-width:640px;width:100%;max-height:90vh;overflow:auto;padding:16px}
 #lightbox{position:fixed;inset:0;background:#000d;display:none;z-index:200;align-items:center;justify-content:center;padding:12px;cursor:zoom-out}
 #lightbox img{max-height:92vh;max-width:94vw;border-radius:14px;border:3px solid #fff4}
 table{border-collapse:collapse;width:100%} th,td{border:1px solid var(--line);padding:5px 8px;text-align:left}
