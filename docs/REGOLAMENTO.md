@@ -39,13 +39,13 @@ Le carte da pescare sono in tutto **183** (75 + 47 + 61), più le 6 armi base. L
 | 5 | 1 in tutto | segnalino su una tessera Luogo: lo prende chi si ferma sopra |
 | 6 | nessuno | — |
 
-Il personaggio si assegna a caso (o si sceglie). L'ordine di turno è fisso per posto, dal #1 in poi. [interpretazione]
+Il personaggio si assegna a caso (o si sceglie). L'ordine di turno è fisso per posto, dal #1 in poi. [chiarito]
 
 ## 4. Giorno, notte e Plancia Tempo
 
 - Una **giornata** sono **due turni di tutti**: un turno intero di GIORNO e uno intero di NOTTE. [chiarito]
 - Dopo che l'ultimo giocatore ha finito il turno scatta il **cambio giornata** (cioè cambia il periodo giorno↔notte): il segnalino si gira, **tutto il mana si ricarica**, le monete di Luogo e Rifugio vengono pagate, si fa avanzare la Plancia Tempo. Per chi gioca è come ricaricare il mana all'inizio del proprio turno. [chiarito]
-- **Plancia Tempo:** si toglie l'anello esterno (livello 5) dopo **5 giornate**, poi il livello 4 dopo altre **4**, poi il livello 3 dopo altre **3**. Con i valori standard sono 10, 8 e 6 cambi giornata. [chiarito, i numeri 5-4-3 sono da verificare: sono parametri]
+- **Plancia Tempo:** si toglie l'anello esterno (livello 5) dopo **5 giornate**, poi il livello 4 dopo altre **4**, poi il livello 3 dopo altre **3**. Con i valori standard sono 10, 8 e 6 cambi giornata. [chiarito: i numeri 5-4-3 restano così per ora; sono un parametro]
 - Quando restano solo i livelli 1–2 si muove con **1D6**.
 - Chi si trova su una tessera che viene rimossa **rientra subito** (tessera di respawn) con PV e mana pieni, **senza perdere il rientro** e senza lasciare bottino; tiene il suo equipaggiamento. [chiarito]
 - I Giocatori Fastidio sulla tessera rimossa escono dal gioco. Il bottino su una tessera rimossa va perso. Le trappole e i segnalini su quella tessera spariscono.
@@ -113,7 +113,7 @@ Con 4 mana una standard fa al massimo 2 attacchi; una avanzata può fare il 2° 
 
 ### 8.4 Pugno
 Gittata 0, danno 1, colpi infiniti, **non costa mana**: se perdi la sfida subisci 1 danno. [chiarito]
-Nel digitale il parametro `punchMax` (0 = illimitati, come da regola) permette di provare un limite di pugni per turno: vedi `docs/DA_RICORDARE.md` per i numeri.
+Il pugno resta **illimitato** [chiarito]: se l'attacco fallisce si perdono PV, quindi non conviene rischiare più di tanto. Nel digitale il parametro `punchMax` (0 = illimitati) permette comunque di provare un limite: vedi `docs/DA_RICORDARE.md` per i numeri.
 
 ### 8.5 Armi
 | Arma | Slot | Tipo | Gittata | Danno | Munizioni | Se perdi | Costo crafting | Copie |
@@ -197,8 +197,8 @@ Inoltre: **3 monete = +1 PV**, **2 monete = +1 munizione** (1 mana ciascuno). Mo
 - Quando un giocatore arriva a 0 PV viene eliminato: perde tutto l'equipaggiamento (tranne le monete), che resta come **bottino** (segnalino LOOT) sulla sua tessera.
 - Chi lo elimina guadagna **+3 monete** e **ruba 1 carta** a scelta dal bottino. L'eliminato riceve monete solo se ne aveva meno di 2 (portato a 2).
 - Chi si **ferma** su una tessera con bottino può prendere fino a **2 oggetti** gratis. Il bottino che si lascia resta lì.
-- **Rivendita** [interpretazione]: se il proprietario del bottino è in attesa di rientrare, chi si ferma sulla tessera può **rivendergli tutto il bottino per 5 monete**, oppure prendere 2 oggetti e **rivendergli il resto per 2 monete**. Le monete arrivano dalla banca e il bottino torna al proprietario appena rientra.
-- **Variante** `shelterLimit` (spenta di default): dopo N turni di fila in un Rifugio, il movimento successivo non può finire in un Rifugio. Serve solo per misurare lo stallo (vedi `DA_RICORDARE.md`).
+- **Rivendita** [chiarito]: se il proprietario del bottino è in attesa di rientrare, chi si ferma sulla tessera può **rivendergli tutto il bottino per 5 monete**, oppure prendere 2 oggetti e **rivendergli il resto per 2 monete**. Le monete arrivano dalla banca e il bottino torna al proprietario appena rientra.
+- **Variante** `shelterLimit` (spenta di default, non fa parte delle regole): dopo N turni di fila in un Rifugio, il movimento successivo non può finire in un Rifugio. Serve solo per misurare lo stallo (vedi `DA_RICORDARE.md`).
 - Se ha un **rientro** lo consuma e rientra all'inizio del suo prossimo turno su una tessera di respawn con **PV e mana pieni**; l'ordine di scelta è: tessere **Luogo**, poi **Rifugio**, poi **Vuote**, poi qualsiasi tessera libera, a caso. Si consuma un rientro **solo se vieni ucciso**. [chiarito]
 - Senza rientri diventi **Giocatore Fastidio**: nel tuo turno tiri **2 dadi**; il primo è il numero di tessere da muovere (obbligatorio, il Fastidio non è bersagliabile e ignora i blocchi). Il secondo è l'azione:
 

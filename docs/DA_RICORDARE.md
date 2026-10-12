@@ -47,7 +47,7 @@ Lettura: i livelli sono distinti e le strategie davvero sbagliate perdono. Ma **
    | 3 | 25,7 (24) | 1% | 27% |
 
    Si prova dall'app (*Parametri delle regole → Pugni max per turno*) o con `node tools/sim.js --players 4 --a hard --experiment punchMax=0,1,2,3`.
-2. **Stallo nei rifugi — è strutturale.** Dentro un Rifugio non si subiscono danni da nessuna fonte esterna (attacchi, Colpo Distruttivo, Tempesta Imminente, Pioggia acida di giorno…): **nessuna carta può dislodgere chi ci sta** (l'unica eccezione è la Pioggia acida di notte di Lasep, 1 danno a tutti anche nei rifugi). Se tutti i giocatori rimasti si mettono nei rifugi la partita non finisce più: visto più volte nei log (tre giocatori che oscillano fra due rifugi per 400 round, tutti a 10 PV). Frequenza: con 2 giocatori il 5% supera 100 round e il 2,5% arriva al limite, con 3 giocatori l'1,7%. Provato:
+2. **Stallo nei rifugi — decisione di Niky: non è un problema** (il movimento è obbligato a ogni turno, quindi non si può restare fermi in un rifugio). Nel simulatore, però, due rifugi vicini si possono "rimbalzare" anche con il movimento esatto (con 2D6 esiste quasi sempre un percorso di quella lunghezza fra i due): succede raramente, vedi i numeri. Lo lascio com'è e lo tengo d'occhio al playtest. **Stallo nei rifugi — dati:** Dentro un Rifugio non si subiscono danni da nessuna fonte esterna (attacchi, Colpo Distruttivo, Tempesta Imminente, Pioggia acida di giorno…): **nessuna carta può dislodgere chi ci sta** (l'unica eccezione è la Pioggia acida di notte di Lasep, 1 danno a tutti anche nei rifugi). Se tutti i giocatori rimasti si mettono nei rifugi la partita non finisce più: visto più volte nei log (tre giocatori che oscillano fra due rifugi per 400 round, tutti a 10 PV). Frequenza: con 2 giocatori il 5% supera 100 round e il 2,5% arriva al limite, con 3 giocatori l'1,7%. Provato:
    - `rifugioCoins = 0` (niente moneta nei rifugi): **nessun effetto** (4,2% → 4,2%), quindi non sono le monete;
    - variante `shelterLimit` (dopo N turni di fila in un Rifugio il movimento successivo non può finire in un Rifugio):
 
@@ -66,12 +66,13 @@ Lettura: i livelli sono distinti e le strategie davvero sbagliate perdono. Ma **
 ## 5. Cose da riguardare al playtest (interpretazioni mie)
 Vedi le voci **[interpretazione]** del regolamento. Le più importanti: raggio e spinta dell'Onda di God_Nocy; difesa reattiva di ’Nganga (come funziona il tiro); nuvola tossica di Sejhnam (dove, quanto dura); seguaci di Kone (dove, quanto restano); Hatci di giorno (cosa si "lancia"); costo in mana di Cibo/Medikit (ora 1); la Tempesta Imminente colpisce anche chi la usa; Zaino (+2 per ogni risorsa); inventario dei progetti (1 per tipo) e delle carte speciali (2); quando il Fastidio ruba il cubetto va perso; monete iniziali 0; ordine di turno fisso per posto; rivendita del bottino (solo finché il proprietario è in attesa di rientrare); le Skill/effetti che tolgono il mana agli avversari (si ferma a 0).
 
-## 6. Domande aperte per te
-1. Durata massima accettabile della partita al tavolo (per fissare l'obiettivo n. 4)?
-2. Vuoi tenere il pugno gratis e illimitato (come regolamento) o provo un limite per turno?
-3. Come vuoi trattare il Rifugio (stallo)? Ho misurato la variante "al massimo N turni di fila"; altre idee le misuro volentieri.
-4. Le giornate 5-4-3 sono quelle giuste? (Non ricordavi bene: restano parametro.)
-5. Vantaggio dell'ultimo di turno: vuoi che provi un ordine di turno diverso (per esempio casuale a ogni round o il vincitore dei dadi che inizia)?
+## 6. Decisioni prese (risposte di Niky)
+1. **Durata massima al tavolo:** non lo so ancora → obiettivo n. 4 aperto; si decide dopo i primi playtest.
+2. **Pugno:** resta **gratis e illimitato** [chiarito] (se fallisce si perdono PV, quindi non conviene rischiare troppo).
+3. **Rifugio/stallo:** non è un problema, il movimento è obbligato a ogni turno. Nessuna modifica; `shelterLimit` resta una variante spenta per le prove.
+4. **Giornate 5-4-3:** per ora restano così.
+5. **Ordine di turno:** resta fisso per posto [chiarito], anche se l'ultimo di turno vince di più con 6 giocatori (da riguardare al playtest).
+6. **Rivendita del bottino:** va bene com'è [chiarito].
 
 ## 7. Cosa è cambiato nell'AI durante questa tappa (letti i log di partite difficile contro difficile)
 - Non fa più attacchi "suicidi": un contraccolpo (pugno perso, corpo a corpo) che può ucciderla pesa molto, e pesa di più quando ha pochi PV.
