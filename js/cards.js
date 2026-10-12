@@ -264,7 +264,7 @@
       const old = p.weapons[o.slot];
       if (old) this.discardWeapon(old);
       p.weapons[o.slot] = { id: x, ammo: 0, mod: null }; p.weapons[o.slot].ammo = this.weaponStats(pid, o.slot).cap;
-      b = this.say('craft', `⚒ ${this.pn(pid)} crafta ${AE.WEAPONS[x].n} (${AE.TIER_NAMES[AE.WEAPONS[x].tier]}).`, pid);
+      b = this.say('craft', `⚒ ${this.pn(pid)} crafta ${AE.WEAPONS[x].n} (${AE.TIER_NAMES[AE.WEAPONS[x].tier]})${old ? ` e scarta ${AE.WEAPONS[old.id].n}` : ''}.`, pid);
     } else if (k === 'ar') {
       if (p.armor) this.discardCard('proj', 'ar:' + p.armor.id);
       p.armor = { id: x, dur: AE.ARMORS[x].dur };
