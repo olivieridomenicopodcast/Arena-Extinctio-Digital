@@ -602,11 +602,11 @@
       const s = this.s, R = this.rules;
       const lvl = 5 - s.removedLevels;
       s.removedLevels++;
-      const gone = [];
-      s.cells.forEach((c, i) => { if (c.tile && AE.CELLS[i].level === lvl) { gone.push(c.tile); s.removedTiles.push(c.tile); c.tile = null; } });
+      const gone = [], goneCells = [];
+      s.cells.forEach((c, i) => { if (c.tile && AE.CELLS[i].level === lvl) { gone.push(c.tile); goneCells.push(i); s.removedTiles.push(c.tile); c.tile = null; } });
       const next = R.levelDays[s.removedLevels];
       s.nextRemoval = next ? s.periodIdx + next * R.periodsPerDay : 1e9;
-      let b = this.say('level', `⬛ Il livello ${lvl} della mappa viene rimosso (${gone.length} tessere).`, null, { tiles: gone.slice(), lvl });
+      let b = this.say('level', `⬛ Il livello ${lvl} della mappa viene rimosso (${gone.length} tessere).`, null, { tiles: gone.slice(), cells: goneCells, lvl });
       if (b) yield b;
       // gli effetti legati alle tessere rimosse
       s.traps = s.traps.filter((t) => !gone.includes(t.tile)); s.traps.forEach((t) => { t.marks = t.marks.filter((m) => !gone.includes(m)); });

@@ -8,6 +8,7 @@
   let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
   AE.CELLS.forEach((c) => { minX = Math.min(minX, cx(c) - S); maxX = Math.max(maxX, cx(c) + S); minY = Math.min(minY, cy(c) - S * R3 / 2); maxY = Math.max(maxY, cy(c) + S * R3 / 2); });
   UI.boardBox = [minX - 8, minY - 8, maxX - minX + 16, maxY - minY + 16];
+  UI.hexPts = hexPts;
   UI.cellXY = (ci) => [cx(AE.CELLS[ci]), cy(AE.CELLS[ci])];
 
   // Disegna tutto il tavolo. opts: { sel:{ci:'sel'|'sel2'}, hint:ci, cur:pid, path:[ci], focus:[ci] }
@@ -56,7 +57,7 @@
         const px = x + rr * Math.cos(ang), py = y + rr * Math.sin(ang) - 2;
         const id = 'clip' + p.id + '_' + ci;
         const r = n === 1 ? 26 : n <= 3 ? 22 : 17;
-        g2 += `<g class="pawn ${opts.cur === p.id ? 'cur' : ''}" opacity="${p.status === 'ghost' ? 0.6 : 1}"><title>${UI.esc(p.name)} (${AE.CHARS[AE.CHAR_IDX[p.char]].n}) ${p.hp} PV</title><clipPath id="${id}"><circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${r}"/></clipPath><circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${r + 3}" fill="${UI.col(p.id)}" stroke="#fff" stroke-width="2"/><image href="${UI.charImg(p.char)}" x="${(px - r * 1.6).toFixed(1)}" y="${(py - r * 0.95).toFixed(1)}" width="${(r * 3.2).toFixed(1)}" height="${(r * 3.2 * 1.56).toFixed(1)}" clip-path="url(#${id})" preserveAspectRatio="xMidYMin slice"/>${p.status === 'ghost' ? `<g transform="translate(${(px - 9).toFixed(1)},${(py - 9).toFixed(1)}) scale(.75)">${UI.sprites.ghost}</g>` : ''}<rect x="${(px + r - 8).toFixed(1)}" y="${(py - r - 4).toFixed(1)}" width="20" height="18" rx="5" fill="#000d" stroke="${UI.col(p.id)}"/><text x="${(px + r + 2).toFixed(1)}" y="${(py - r + 10).toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">${p.status === 'ghost' ? '👻' : p.hp}</text></g>`;
+        g2 += `<g class="pawn ${opts.cur === p.id ? 'cur' : ''}" data-pid="${p.id}" data-x="${px.toFixed(1)}" data-y="${py.toFixed(1)}" opacity="${p.status === 'ghost' ? 0.6 : 1}"><title>${UI.esc(p.name)} (${AE.CHARS[AE.CHAR_IDX[p.char]].n}) ${p.hp} PV</title><clipPath id="${id}"><circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${r}"/></clipPath><circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${r + 3}" fill="${UI.col(p.id)}" stroke="#fff" stroke-width="2"/><image href="${UI.charImg(p.char)}" x="${(px - r * 1.6).toFixed(1)}" y="${(py - r * 0.95).toFixed(1)}" width="${(r * 3.2).toFixed(1)}" height="${(r * 3.2 * 1.56).toFixed(1)}" clip-path="url(#${id})" preserveAspectRatio="xMidYMin slice"/>${p.status === 'ghost' ? `<g transform="translate(${(px - 9).toFixed(1)},${(py - 9).toFixed(1)}) scale(.75)">${UI.sprites.ghost}</g>` : ''}<rect x="${(px + r - 8).toFixed(1)}" y="${(py - r - 4).toFixed(1)}" width="20" height="18" rx="5" fill="#000d" stroke="${UI.col(p.id)}"/><text x="${(px + r + 2).toFixed(1)}" y="${(py - r + 10).toFixed(1)}" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">${p.status === 'ghost' ? '👻' : p.hp}</text></g>`;
       });
       g2 += '</g>';
       out.push(g2);
@@ -72,6 +73,15 @@
       }
       flush();
     }
+    const old = {};
+    svg.querySelectorAll('.pawn[data-pid]').forEach((e) => { old[e.dataset.pid] = [+e.dataset.x, +e.dataset.y]; });
     svg.innerHTML = out.join('');
+    UI.lastPos = UI.lastPos || {}; UI.moves = UI.moves || {};
+    svg.querySelectorAll('.pawn[data-pid]').forEach((e) => {
+      const id = e.dataset.pid, nw = [+e.dataset.x, +e.dataset.y], o = old[id];
+      if (o && Math.hypot(o[0] - nw[0], o[1] - nw[1]) > 3 && !UI.moves[id]) UI.moves[id] = o;
+      if (!o) UI.born = UI.born || {}, UI.born[id] = 1;
+      UI.lastPos[id] = nw;
+    });
   };
 })(typeof window !== 'undefined' ? window : globalThis);

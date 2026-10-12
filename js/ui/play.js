@@ -102,26 +102,48 @@
     }
 
     async showBeat(ev) {
-      const g = this.game;
-      if (g.replay.length && !this.cfg.review) return;           // ripresa: niente messaggi
+      const g = this.game, A = UI.anim;
+      const skip = () => { A.takeMoves(); };
+      if (g.replay.length && !this.cfg.review) return skip();           // ripresa: niente messaggi
       const always = ALWAYS_CLICK.includes(ev.k);
-      if (this.skipping && !(ev.k === 'end')) { if (this.mode === 'play') return; }
-      if (this.speed === 'instant' && !always) return;
-      if (this.speed === 'instant' && this.mode === 'watch' && ev.k !== 'end') return;
+      if (this.skipping && !(ev.k === 'end')) { if (this.mode === 'play') return skip(); }
+      if (this.speed === 'instant' && !always) return skip();
+      if (this.speed === 'instant' && this.mode === 'watch' && ev.k !== 'end') return skip();
+      A.speed = this.speed;
       this.refresh(null, ev);
-      const b = $('#banner');
+      const st = A.takeMoves();
+      const b = $('#banner'), d = ev.d || {};
       b.className = ev.per === 'night' ? 'night' : 'day'; if (['period', 'level', 'end', 'kill'].includes(ev.k)) b.classList.add('big');
       b.innerHTML = `<div class="msg">${esc(ev.text)}</div><div class="hint"><span>${ev.k === 'turn' || ev.k === 'period' || ev.k === 'level' ? 'Cambio di turno/fase: serve il tuo clic.' : ''}</span><span><button class="btn small primary">Avanti ▶</button> <span class="kbd">Spazio</span> <span class="kbd">Invio</span></span></div>`;
+      const groups = this.diceGroups(ev);
+      if (groups.length) {
+        const box = h('div', { class: 'dicebox' }); box._groups = groups; groups.forEach((x) => box.append(x.el));
+        if (ev.k === 'attack' && d.ra) box.append(h('div', { class: 'verdict ' + (d.win ? 'hit' : 'miss') }, d.win ? '💥 COLPITO!' : '🛡 MANCATO'));
+        b.querySelector('.msg').after(box);
+      }
+      if (ev.k === 'gain' && d.card && !String(d.card).startsWith('cube:')) { const im = UI.cardImg(String(d.card)); if (im) { im.classList.add('gaincard'); b.querySelector('.msg').after(im); } }
       b.style.display = 'block';
+      const ap = A.playBeat($('#board'), ev, st, b);
       const auto = SPEEDS[this.speed];
       await new Promise((res) => {
         this.beatResolve = res;
-        if (auto > 0 && !always) this.beatTimer = setTimeout(() => this.advance(), auto);
-        else if (auto > 0 && always && this.mode === 'watch') this.beatTimer = setTimeout(() => this.advance(), auto * 1.2);
+        ap.then(() => {
+          if (this.beatResolve !== res) return;
+          if (auto > 0 && !always) this.beatTimer = setTimeout(() => this.advance(), auto);
+          else if (auto > 0 && always && this.mode === 'watch') this.beatTimer = setTimeout(() => this.advance(), auto * 1.2);
+        });
       });
       b.style.display = 'none';
     }
-    advance() { clearTimeout(this.beatTimer); const r = this.beatResolve; this.beatResolve = null; if (r) r(); }
+    // gruppi di dadi da mostrare per un messaggio (tiro di movimento o sfida di attacco)
+    diceGroups(ev) {
+      const d = ev.d || {}, g = this.game, A = UI.anim;
+      const dropOf = (r) => { if (!r || r.dice.length < 3) return -1; const v = r.mode === 'vantaggio' ? Math.min(...r.dice) : Math.max(...r.dice); return r.dice.indexOf(v); };
+      if (ev.k === 'roll' && d.rolls) return [A.diceGroup(g.pn(ev.p) + ' · movimento', d.rolls, -1, d.rolls.reduce((a, c) => a + c, 0))];
+      if (ev.k === 'attack' && d.ra && d.rd) return [A.diceGroup('⚔ ' + g.pn(ev.p), d.ra.dice, dropOf(d.ra), d.ra.sum, d.ra.mode), A.diceGroup('🛡 ' + g.pn(d.tgt), d.rd.dice, dropOf(d.rd), d.rd.sum, d.rd.mode)];
+      return [];
+    }
+    advance() { UI.anim.finishAll(); clearTimeout(this.beatTimer); const r = this.beatResolve; this.beatResolve = null; if (r) r(); }
 
     // ───────────── rendering ─────────────
     refresh(dec, ev) {
