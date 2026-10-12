@@ -302,7 +302,7 @@
     }
     listUI(d, done, head, hintBtn) {
       const g = this.game, panel = $('#actionPanel');
-      const modal = d.what === 'yesno' || d.what === 'overflow' || d.what === 'steal' || d.what === 'cards' || d.what === 'deck';
+      const modal = d.what === 'yesno' || d.what === 'overflow' || d.what === 'steal' || d.what === 'cards' || d.what === 'deck' || d.what === 'equip';
       head(d.prompt || 'Scegli');
       hintBtn(() => { const i = this.suggest(d); $('#hintTxt').textContent = `Suggerisco: ${d.options[i].label}`; const bs = $$('.opt', panel); if (bs[i]) bs[i].classList.add('hl'); });
       const $$ = UI.$$;

@@ -137,25 +137,30 @@
   G.activateEquip = function* (pid, t) {
     const s = this.s, p = this.pl(pid);
     let b;
+    // Su una tessera Equipaggiamento si fa UNA sola cosa: prendere un'arma base, oppure ricaricare, oppure curarsi col medikit.
     const wanted = t.weapon === 'both' ? ['w:foolshift', 'w:xas'] : t.weapon === 'mitra' ? ['w:foolshift'] : t.weapon === 'pistola' ? ['w:xas'] : [];
+    const opts = [];
     for (const id of wanted) {
-      const i = s.decks.base.indexOf(id);
-      if (i < 0) { this.emit('info', `Le armi base ${AE.cardName(id)} sono finite.`, pid); continue; }
+      if (s.decks.base.indexOf(id) < 0) { this.emit('info', `L’arma base ${AE.cardName(id)} è finita.`, pid); continue; }
       const w = AE.WEAPONS[id.slice(2)], cur = p.weapons[w.slot];
-      if (cur) {
-        const o = yield* this.choose(pid, 'yesno', `Sostituire ${AE.WEAPONS[cur.id].n} con ${w.n}?`, [{ label: `Sì, prendi ${w.n}`, yes: true }, { label: 'No', yes: false }], { force: true });
-        if (!o.yes) continue;
-        this.discardWeapon(cur);
-      }
-      s.decks.base.splice(i, 1);
-      p.weapons[w.slot] = { id: id.slice(2), ammo: 0, mod: null }; p.weapons[w.slot].ammo = this.weaponStats(pid, w.slot).cap;
-      b = this.say('gain', `🔫 ${this.pn(pid)} prende l’arma base ${w.n}.`, pid); if (b) yield b;
+      if (cur && cur.id === id.slice(2)) continue;
+      opts.push({ act: 'weapon', id, slot: w.slot, label: `Prendere l’arma base ${w.n}${cur ? ` (al posto di ${AE.WEAPONS[cur.id].n})` : ''}` });
     }
-    if (t.ammo) {
+    const missing = ['primary', 'secondary', 'melee'].reduce((n, sl) => { const w = p.weapons[sl]; return n + (w ? Math.max(0, this.weaponStats(pid, sl).cap - w.ammo) : 0); }, 0);
+    if (t.ammo && missing > 0) opts.push({ act: 'ammo', n: missing, label: `Ricaricare le munizioni al massimo (+${missing})` });
+    if (t.heal && p.hp < this.rules.healthCap) opts.push({ act: 'heal', label: `Usare il medikit (+${Math.min(2, this.rules.healthCap - p.hp)} PV)` });
+    if (!opts.length) return;
+    const o = yield* this.choose(pid, 'equip', 'Tessera Equipaggiamento: puoi fare UNA sola cosa', opts, { force: true });
+    if (o.act === 'weapon') {
+      const w = AE.WEAPONS[o.id.slice(2)], cur = p.weapons[w.slot];
+      if (cur) this.discardWeapon(cur);
+      s.decks.base.splice(s.decks.base.indexOf(o.id), 1);
+      p.weapons[w.slot] = { id: o.id.slice(2), ammo: 0, mod: null }; p.weapons[w.slot].ammo = this.weaponStats(pid, w.slot).cap;
+      b = this.say('gain', `🔫 ${this.pn(pid)} prende l’arma base ${w.n}.`, pid); if (b) yield b;
+    } else if (o.act === 'ammo') {
       const n = this.refillAmmo(pid);
       if (n) { b = this.say('gain', `🔋 ${this.pn(pid)} ricarica ${n} munizioni.`, pid); if (b) yield b; }
-    }
-    if (t.heal && p.hp < this.rules.healthCap) {
+    } else if (o.act === 'heal') {
       const n = this.heal(pid, 2);
       if (n) { b = this.say('heal', `💚 ${this.pn(pid)} recupera ${n} PV.`, pid, { n }); if (b) yield b; }
     }

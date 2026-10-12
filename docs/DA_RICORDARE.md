@@ -90,3 +90,6 @@ node tools/sim.js --games 60 --players 3 --a medium --effects 60          # resa
 
 ## 9. Animazioni (aggiunte dopo la richiesta di Niky)
 Dadi che rotolano (movimento e sfide: il dado scartato col vantaggio/svantaggio è scurito), pedina che cammina lungo il percorso (portali: sparisce e riappare), affondo nello stesso spazio, proiettile con lampo a distanza, scossa e −N sul colpito, "MANCATO", +N verde per le cure, 💀 all'eliminazione, monete, rientro, Ulti, cambio giorno/notte, tempesta, livello che sparisce e carta guadagnata nel messaggio. Seguono la velocità scelta (istantanea = nessuna), rispettano `prefers-reduced-motion` e un clic su *Avanti* le salta. Prova nel browser: `NODE_PATH=/opt/node-tools/node_modules node tools/e2e-anim.js`.
+
+## 10. Tessera Equipaggiamento: una sola scelta (regola di Niky)
+Sulla tessera si fa **una sola cosa** (arma base, o munizioni al massimo, o medikit). Rimisurato con la regola nuova (3 giocatori, 240 partite, difficile/media/facile): **51% [45–57] / 36% [30–43] / 13% [9–17]**; prima della modifica era 58/39/3 (90 partite): la facile guadagna perché ora la scelta giusta pesa meno. Il test dei livelli AI usa 60 partite e controlla solo che la facile sia nettamente dietro (la distanza difficile/media a 60 partite è dentro il rumore).

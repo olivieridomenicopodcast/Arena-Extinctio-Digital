@@ -349,11 +349,18 @@ test('mercato: prezzi dal mazzo/display e 1 mana; vita 3 monete, munizione 2', (
   assert.ok(o.find((x) => x.deck === 'proj' && x.from === 'display' && x.price === 3));
   p.hp = 5; assert.ok(g.buyOptions(0).find((x) => x.kind === 'buyhp' && x.price === 3));
 });
-test('tessera Equipaggiamento: arma base raffigurata, munizioni al massimo, +2 PV col medikit', () => {
+test('tessera Equipaggiamento: una sola cosa fra arma base, munizioni al massimo, +2 PV col medikit', () => {
   const g = mk(2, { layout: layout({ [at(0, 0)]: 45 }) });
   place(g, 0, 0, 0); prep(g, 0); g.pl(0).hp = 5;
-  drive(g.activateEquip(0, AE.tile(45)), () => 0);
-  assert.ok(g.pl(0).weapons.primary && g.pl(0).weapons.secondary); assert.strictEqual(g.pl(0).hp, 7);
+  let seen = null;
+  drive(g.activateEquip(0, AE.tile(45)), (d) => { seen = d.options.map((o) => o.act).sort().join(','); return d.options.findIndex((o) => o.act === 'weapon'); });
+  assert.strictEqual(seen, 'heal,weapon,weapon', 'arma base ×2 (ricarica solo se serve) e medikit');
+  const n = ['primary', 'secondary'].filter((x) => g.pl(0).weapons[x]).length;
+  assert.strictEqual(n >= 1, true); assert.strictEqual(g.pl(0).hp, 5, 'ha scelto l’arma: niente cura');
+  const g2 = mk(2, { layout: layout({ [at(0, 0)]: 45 }) });
+  place(g2, 0, 0, 0); prep(g2, 0); g2.pl(0).hp = 5;
+  drive(g2.activateEquip(0, AE.tile(45)), (d) => d.options.findIndex((o) => o.act === 'heal'));
+  assert.strictEqual(g2.pl(0).hp, 7);
 });
 test('display: dopo un acquisto si rimpiazza dal mazzo', () => {
   const g = mk(2); const before = g.s.display.mat;

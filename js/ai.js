@@ -396,6 +396,12 @@
             return 1.7 + 0.5;
           });
         }
+        case 'equip': return argmax((o) => {
+          const p = g.pl(pid);
+          if (o.act === 'ammo') return o.n * 0.9;
+          if (o.act === 'heal') return Math.min(2, g.rules.healthCap - p.hp) * (p.hp <= 5 ? 1.6 : 1) + 0.3;
+          const cur = p.weapons[o.slot]; return wv(o.id.slice(2)) * 1.2 + 1 - (cur ? wv(cur.id) : 0);
+        });
         case 'deck': return argmax((o) => deckNeed(g, pid, o.deck) + rng() * 0.2);
         case 'target': return argmax((o) => -g.pl(o.pid).hp + (g.pl(o.pid).armor ? -1 : 0));
         case 'respawn': return argmax((o) => { const ci = g.cellOfTile(o.tile); return AI.tileValue(g, pid, o.tile) - AI.threatAt(g, pid, ci) - AI.levelRisk(g, ci); });
