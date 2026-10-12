@@ -252,8 +252,9 @@
 
     moveUI(d, done, head, hintBtn) {
       const g = this.game, s = g.s, panel = $('#actionPanel');
-      head(`Il tuo movimento: ${d.roll} ${d.roll === 1 ? 'passo' : 'passi'}${d.steps !== d.roll ? ` (puoi usarne ${d.steps})` : ''}`, d.ghost ? 'Fastidio: scegli dove muoverti.' : 'Devi muoverti esattamente di quel numero. Clicca una tessera evidenziata (puoi vedere il percorso passandoci sopra).');
-      const sel = {}; d.options.forEach((o) => { sel[o.cell] = 'sel'; }); this.sel = sel;
+      const start = g.cellOfPlayer(d.pid);
+      head(`Il tuo movimento: ${d.roll} ${d.roll === 1 ? 'passo' : 'passi'}${d.steps !== d.roll ? ` (puoi usarne ${d.steps})` : ''} — ${d.options.length} tessere raggiungibili`, d.ghost ? 'Fastidio: scegli dove muoverti.' : 'Devi muoverti <b>esattamente</b> di quel numero di tessere, ma puoi anche <b>girare</b>: l’importante è non ripassare due volte sulla stessa tessera. Contorno pieno = ci arrivi in linea, tratteggiato = ci arrivi girando. Passa sopra una tessera per vedere il percorso.');
+      const sel = {}; d.options.forEach((o) => { sel[o.cell] = AE.cellDist(start, o.cell) === d.steps ? 'sel' : 'selw'; }); this.sel = sel;
       const byCell = {}; d.options.forEach((o, i) => { byCell[o.cell] = i; });
       this.onHover = (ci) => { if (byCell[ci] != null) { this.path = [g.cellOfPlayer(d.pid)].concat(d.options[byCell[ci]].path); this.refresh(d); this.sel = sel; UI.renderBoard($('#board'), g, { sel, cur: d.pid, path: this.path, hint: this.hintCell }); } };
       this.onCell = (ci) => { if (byCell[ci] != null) this.confirmThen(null, () => done(byCell[ci])); };

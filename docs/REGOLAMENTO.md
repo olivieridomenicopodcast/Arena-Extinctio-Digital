@@ -64,6 +64,7 @@ Muoversi e attivare la tessera sono gratis. Le **Skill/effetti di carta** costan
 ## 6. Movimento
 
 - Tira **2D6** (1D6 se restano solo i livelli 1–2) e muoviti di **esattamente** quel numero di tessere. [chiarito]
+- Puoi **girare** per consumare i passi: l'unico divieto è ripassare su una tessera già calpestata nello stesso turno. Per questo con 2D6 (media 7) su una mappa larga 9 tessere si raggiungono quasi tutte le tessere entro 7 di distanza, anche vicine, e più di metà della mappa dal bordo (47 su 61 con 7 passi). [interpretazione: il testo non dice se si può girare; senza questa regola chi sta al centro con 7 passi non potrebbe quasi mai consumarli e subirebbe 1 danno quasi a ogni turno]
 - Non puoi tornare su una tessera già calpestata nello stesso turno.
 - Non si attraversano le tessere Insormontabili (mare, montagna, fiume, deserto) né i lati con un **muro**; puoi stare nella stessa tessera di un altro giocatore.
 - **Teletrasporto:** se passi su una tessera portale vieni teletrasportato subito e obbligatoriamente su un altro portale compatibile; l'uscita vale ancora come lo stesso passo, poi continui a camminare. Da un portale A vai su un altro A o sul portale doppio; da un B su un altro B o sul doppio; dal doppio su qualsiasi altro portale; **scegli tu** la destinazione. Non ti puoi fermare su un portale. [chiarito]
