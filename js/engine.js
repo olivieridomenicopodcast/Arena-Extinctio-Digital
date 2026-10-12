@@ -74,7 +74,11 @@
       this.stats = { p: [], g: {} };
       this.result = null;
       this.onEvent = null;
-      this.s = this._setup(cfg);
+      if (cfg.resume) {            // ripresa da un'istantanea a inizio turno (salvataggi fatti con una versione precedente delle regole)
+        this.s = JSON.parse(cfg.resume.s); this.events = cfg.resume.events || []; this.stats = cfg.resume.stats || this.stats;
+        this._resumeK = cfg.resume.k; this.replay = [];
+      } else this.s = this._setup(cfg);
+      this.keepSnaps = !!cfg.keepSnaps;
     }
 
     clone() {
@@ -287,15 +291,21 @@
     *run() {
       const s = this.s;
       s.phase = 'play';
-      let b = this.say('start', `🎲 Si comincia: ${s.n} giocatori, mappa a ${s.cells.length} tessere, è GIORNO.`);
-      if (b) yield b;
+      if (this._resumeK == null) {
+        const b0 = this.say('start', `🎲 Si comincia: ${s.n} giocatori, mappa a ${s.cells.length} tessere, è GIORNO.`);
+        if (b0) yield b0;
+      }
+      let k0 = this._resumeK || 0; this._resumeK = null;
       while (!s.over) {
         const order = [];
         for (let k = 0; k < s.n; k++) order.push((s.start + k) % s.n);
-        for (const pid of order) {
+        for (let k = k0; k < order.length; k++) {
+          const pid = order[k];
           if (s.over) break;
+          if (this.keepSnaps) this.snap = { k, s: JSON.stringify(s), events: this.events.slice(-300), stats: JSON.parse(JSON.stringify(this.stats)) };
           yield* this.turn(pid);
         }
+        k0 = 0;
         if (s.over) break;
         yield* this.periodChange();
         if (s.round > this.rules.maxRounds) { this._finish(null, 'tempo massimo'); break; }

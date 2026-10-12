@@ -16,7 +16,7 @@ const server = http.createServer((req, res) => { let p = decodeURIComponent(req.
   for (let n = 0; n < 300; n++) {
     if (await p.locator('#modalBg:visible .btn.primary').count()) { await p.locator('#modalBg:visible .btn.primary').first().click(); continue; }
     if (await p.locator('#banner:visible').count()) { await p.keyboard.press('Space'); await p.waitForTimeout(10); continue; }
-    const hex = p.locator('#board .hex.sel, #board .hex.sel2'); if (await hex.count()) { await hex.nth(0).dispatchEvent('click'); await p.waitForTimeout(10); continue; }
+    const hex = p.locator('#board .hex.sel, #board .hex.selw, #board .hex.selp, #board .hex.sel2'); if (await hex.count()) { await hex.nth(0).dispatchEvent('click'); await p.waitForTimeout(10); continue; }
     const acts = p.locator('#actionPanel .act:not([disabled])'); if (await acts.count()) { await acts.last().click(); await p.waitForTimeout(10); continue; }
     const opts = p.locator('#actionPanel .opt:not([disabled])'); if (await opts.count()) { await opts.first().click(); continue; }
     await p.waitForTimeout(20);

@@ -23,7 +23,7 @@
       this.skipping = false; this.tab = 'players'; this.view = Math.max(0, cfg.players.findIndex((p) => p.kind === 'human'));
       this.aborted = false; this.tick = 0; this.hintOn = false; this.sel = null; this.path = null; this.hintCell = null;
       const replay = cfg.history ? cfg.history.slice() : [];
-      this.game = new AE.Game({ seed: cfg.seed, players: cfg.players, rules: cfg.rules, beats: true, replay });
+      this.game = new AE.Game({ seed: cfg.seed, players: cfg.players, rules: cfg.rules, beats: true, replay, resume: cfg.resume, keepSnaps: !cfg.review });
       this.game.onEvent = (ev) => this.onEvent(ev);
       this.ais = cfg.players.map((p, i) => (p.kind === 'human' ? null : AE.AI.create(p.level || 'medium', `${cfg.seed}:${i}`)));
       this.hintAI = AE.AI.create('hard', 'hint:' + cfg.seed);
@@ -75,7 +75,7 @@
     // ───────────── salvataggio ─────────────
     save(finished) {
       if (this.cfg.review) return;
-      try { localStorage.setItem(SAVE_KEY, JSON.stringify({ cfg: { seed: this.cfg.seed, players: this.cfg.players, rules: this.cfg.rules, speed: this.speed }, history: this.game.history, notes: this.notes, finished: !!finished, ts: Date.now() })); } catch (e) { }
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify({ cfg: { seed: this.cfg.seed, players: this.cfg.players, rules: this.cfg.rules, speed: this.speed }, history: this.game.history, build: AE.BUILD, snap: this.game.snap || null, notes: this.notes, finished: !!finished, ts: Date.now() })); } catch (e) { }
     }
 
     // ───────────── ciclo principale ─────────────

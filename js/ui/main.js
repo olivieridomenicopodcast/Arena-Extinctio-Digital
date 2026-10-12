@@ -32,6 +32,14 @@
   UI.homeScreen = function () {
     const el = $('#screen'); el.innerHTML = '';
     const save = UI.loadSave();
+    // Un salvataggio si rigioca mossa per mossa solo se il motore è lo stesso; altrimenti si riparte dall'inizio del turno salvato.
+    const resumeSave = (sv) => {
+      const same = sv.build === AE.BUILD;
+      if (same) return UI.startSession(Object.assign({}, sv.cfg, { history: sv.history, notes: sv.notes }));
+      if (sv.snap) { UI.toast('Le regole sono state aggiornate dopo il salvataggio: riprendo dall’inizio del tuo ultimo turno.'); return UI.startSession(Object.assign({}, sv.cfg, { resume: sv.snap, notes: sv.notes })); }
+      UI.modal.open(UI.h('div', {}, UI.h('h3', {}, '⚠ Salvataggio di una versione precedente'), UI.h('p', {}, 'Questo salvataggio è stato fatto prima di un aggiornamento delle regole e non si può ripristinare esattamente: la partita ripartirebbe da uno stato diverso. Puoi provare lo stesso (la partita potrebbe non coincidere con quella che ricordi) oppure eliminarlo.'),
+        UI.h('div', { class: 'row' }, UI.h('button', { class: 'btn warn', onclick: () => { UI.modal.close(); UI.clearSave(); UI.homeScreen(); } }, 'Elimina il salvataggio'), UI.h('button', { class: 'btn', onclick: () => { UI.modal.close(); UI.startSession(Object.assign({}, sv.cfg, { history: sv.history, notes: sv.notes })); } }, 'Prova lo stesso'), UI.h('button', { class: 'btn', onclick: () => UI.modal.close() }, 'Annulla'))));
+    };
     const state = { n: 3, seats: [], seed: String(Math.floor(Math.random() * 1e6)), rules: {}, levelDays: AE.DEFAULT_RULES.levelDays.slice() };
     const mkSeat = (i) => ({ kind: i === 0 ? 'human' : 'ai', level: 'medium', char: '' });
     for (let i = 0; i < 6; i++) state.seats.push(mkSeat(i));
@@ -67,7 +75,7 @@
       h('div', { class: 'grid', style: 'grid-template-columns:repeat(auto-fit,minmax(320px,1fr))' },
         h('div', { class: 'card' }, h('h3', {}, 'Nuova partita'), h('div', { class: 'row' }, nsel, h('label', {}, 'Seed', seed)), h('div', { class: 'small dim' }, 'Il posto #1 è l’umano (se lo imposti), gli altri sono AI. Con il seed puoi rigiocare la stessa partita.'), seatsBox, rulesBox,
           h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn primary', onclick: () => play('vs') }, '▶ Gioca contro l’AI'), h('button', { class: 'btn', onclick: () => play('watch') }, '🍿 AI contro AI (da guardare)'), h('button', { class: 'btn', onclick: () => play('custom') }, 'Parti con i posti scelti'))),
-        h('div', { class: 'card' }, h('h3', {}, 'Riprendi'), save && !save.finished ? h('div', {}, h('p', {}, `Partita in corso (seed ${save.cfg.seed}, ${save.cfg.players.length} giocatori, ${save.history.length} decisioni).`), h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: () => UI.startSession(Object.assign({}, save.cfg, { history: save.history, notes: save.notes })) }, '⏯ Riprendi'), h('button', { class: 'btn warn', onclick: () => { UI.clearSave(); UI.homeScreen(); } }, 'Scarta il salvataggio'))) : h('p', { class: 'dim' }, 'Nessuna partita da riprendere. Il salvataggio è automatico.'),
+        h('div', { class: 'card' }, h('h3', {}, 'Riprendi'), save && !save.finished ? h('div', {}, h('p', {}, `Partita in corso (seed ${save.cfg.seed}, ${save.cfg.players.length} giocatori, ${save.history.length} decisioni).`), h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: () => resumeSave(save) }, '⏯ Riprendi'), h('button', { class: 'btn warn', onclick: () => { UI.clearSave(); UI.homeScreen(); } }, 'Scarta il salvataggio'))) : h('p', { class: 'dim' }, 'Nessuna partita da riprendere. Il salvataggio è automatico.'),
           h('h3', { style: 'margin-top:16px' }, 'Come si gioca'), h('div', { class: 'small' }, 'Essere l’ultimo giocatore in vita. Muoviti con 2D6 (1D6 quando restano solo i livelli 1–2), fermati sulle tessere per raccogliere carte, crafta armi, attacca con la sfida dei dadi e usa Skill e Ulti. La mappa si restringe a ogni giornata.'), h('div', { class: 'row', style: 'margin-top:8px' }, h('button', { class: 'btn', onclick: () => UI.go('rules') }, '📖 Regolamento completo'), h('button', { class: 'btn', onclick: () => UI.go('sim') }, '📊 Simulatore'), h('a', { class: 'btn primary', href: 'stampa/index.html', style: 'text-decoration:none' }, '🖨 Stampa e gioca'))),
         h('div', { class: 'card legend', html: UI.legendHtml() })));
     draw();

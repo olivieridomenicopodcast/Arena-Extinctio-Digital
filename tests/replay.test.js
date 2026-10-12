@@ -31,3 +31,20 @@ test('ripresa dal salvataggio: lo stato ricostruito è identico, in ogni punto d
   }
   assert.ok(checks >= 12, 'controlli eseguiti: ' + checks);
 });
+
+test('ripresa da istantanea a inizio turno: la partita riparte dallo stesso stato e arriva alla fine', () => {
+  const players = [{ name: 'A', kind: 'ai' }, { name: 'B', kind: 'ai' }, { name: 'C', kind: 'ai' }];
+  const ais = players.map((p, i) => AE.AI.create('medium', 's' + i));
+  const g = new AE.Game({ seed: 'snap1', players, keepSnaps: true });
+  const gen = g.run(); let r = gen.next(), n = 0, keep = null;
+  while (!r.done) {
+    if (r.value.type === 'choose') { if (++n === 25) keep = { snap: g.snap, round: g.s.round, turnNo: JSON.parse(g.snap.s).turnNo }; r = gen.next(ais[r.value.pid].decide(g, r.value)); } else r = gen.next();
+    if (n > 3000) break;
+  }
+  assert.ok(keep && keep.snap, 'istantanea presente');
+  const g2 = new AE.Game({ seed: 'snap1', players, resume: keep.snap });
+  assert.strictEqual(g2.s.turnNo, keep.turnNo);
+  const gen2 = g2.run(); let q = gen2.next(), m = 0;
+  while (!q.done && m++ < 6000) q = q.value.type === 'choose' ? gen2.next(ais[q.value.pid].decide(g2, q.value)) : gen2.next();
+  assert.ok(g2.s.over, 'la partita ripresa finisce');
+});
