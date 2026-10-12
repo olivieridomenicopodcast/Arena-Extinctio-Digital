@@ -5,7 +5,7 @@
   const { h, $, esc, icon } = UI;
   const SAVE_KEY = 'ae-save-v1';
   const ALWAYS_CLICK = ['turn', 'period', 'level', 'start', 'end', 'kill', 'respawn'];
-  const SPEEDS = { manual: 0, slow: 1600, normal: 800, fast: 300, instant: -1 };
+  const SPEEDS = { manual: 0, slow: 1200, normal: 500, fast: 100, instant: -1 };
   const SPEED_NAMES = { manual: 'Manuale (clic)', slow: 'Lento', normal: 'Normale', fast: 'Veloce', instant: 'Istantaneo' };
   UI.SPEED_NAMES = SPEED_NAMES;
 
@@ -151,7 +151,10 @@
         h('span', { class: 'pill', title: 'Plancia Tempo', html: left == null ? '⬛ Restano i livelli 1–2 · 1D6' : `⬛ Livello ${5 - s.removedLevels} sparisce tra <b>${left}</b> cambi giornata` }),
         h('span', { class: 'pill', html: `${icon('carte', 20)} Mappa: ${s.cells.filter((c) => c.tile).length} tessere · ${g.mapDice()}D6` }),
         cur && !s.over ? h('span', { class: 'pill', style: `border-color:${UI.col(cur.id)}` }, `Turno: ${cur.name}`) : null,
-        s.freeze > 0 ? h('span', { class: 'pill', html: '⏸ Periodo bloccato (God_Nocy)' }) : null].forEach((e) => { if (e) st.append(e); });
+        s.freeze > 0 ? h('span', { class: 'pill', html: '⏸ Periodo bloccato (God_Nocy)' }) : null,
+        ...s.tempests.map((t) => h('span', { class: 'pill', style: 'border-color:#ff9a3c', title: 'Tempesta Imminente: 3 danni a chi non è in un rifugio', html: `⛈ Tempesta di ${esc(s.players[t.owner].name)} tra <b>${Math.max(0, t.at - s.periodIdx)}</b> cambi` })),
+        s.cloud && s.periodIdx < s.cloud.until ? h('span', { class: 'pill', style: 'border-color:#8cff66', html: `${icon('cloud', 18)} Nuvola tossica ancora per ${s.cloud.until - s.periodIdx} cambi` }) : null,
+        !s.over ? h('span', { class: 'pill', title: 'Il cambio giornata scatta quando finisce il turno dell’ultimo giocatore', html: `🔔 Cambio giornata dopo ${esc(s.players[(s.start + s.n - 1) % s.n].name)}` }) : null].forEach((e) => { if (e) st.append(e); });
     }
     renderTabs() {
       const t = $('#tabs'); t.innerHTML = '';

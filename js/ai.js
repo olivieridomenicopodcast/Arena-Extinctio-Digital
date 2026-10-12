@@ -71,7 +71,7 @@
         break;
       }
       case 'ulti': v = t.owner === pid && s.crater[t.id] && !p.ultiHeld ? 3.2 : 0; break;
-      case 'rifugio': v = p.hp >= 8 ? 0.05 : p.hp >= 6 ? 0.6 : 2.2; break;
+      case 'rifugio': v = (p.hp >= 8 ? 0.05 : p.hp >= 6 ? 0.6 : 2.2) * ((s.round - (s.lastDmgRound || 1)) > 20 ? 0.2 : 1); break;
       case 'luogo': v = (p.at === t.id ? 0 : 0.3) + (t.owner === pid ? 0.5 : 0.3); break;
       default: v = 0;
     }
@@ -105,7 +105,9 @@
       if (q.ultiHeld && q.mana >= 3) best += 0.6;
       th += best;
     }
-    return th;
+    // pazienza: se da tanto nessuno si fa male (stallo), il timore cala e si esce allo scoperto
+    const idle = s.round - (s.lastDmgRound || 1);
+    return th * (idle > 12 ? Math.max(0.1, 1 - (idle - 12) / 25) : 1);
   };
   // livello rimosso a breve?
   AI.levelRisk = function (g, ci) {
@@ -258,7 +260,10 @@
           const armorAbs = q.armor ? AE.ARMORS[q.armor.id].dif : 0; dmg = Math.max(0, dmg - (q.temp.shield ? Math.min(q.temp.shield, dmg) : 0) - armorAbs * 0.8);
           let gain = dmg * pw;
           if (st.dan >= q.hp && dmg >= q.hp) gain += pw * (5 + R.killCoins * 0.4);    // eliminazione
-          const loss = (1 - pw) * (st.fal || 0) * 1.1;
+          // contraccolpo se perdi: più pesante quando i PV sono pochi; se può ucciderti è quasi un suicidio
+          const failDmg = st.fal || 0, hpFactor = 1 + Math.max(0, 5 - p.hp) * 0.5;
+          let loss = (1 - pw) * failDmg * 1.1 * hpFactor;
+          if (failDmg >= p.hp) loss += (1 - pw) * 12;
           const cost = o.cost * 0.15 + (o.slot === 'fist' ? 0 : 0.2) + (o.vant ? 0.9 : 0);
           // se è una sfida contro un avversario forte è meglio scegliere il bersaglio più debole
           return (gain - loss) * P.aggr - cost + (q.hp <= 3 ? 0.5 : 0);

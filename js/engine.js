@@ -143,7 +143,7 @@
       s.round = 1; s.periodIdx = 0; s.period = 'day';
       s.nextRemoval = R.levelDays[0] * R.periodsPerDay;   // tra quanti cambi giornata si toglie il prossimo livello
       s.turnNo = 0; s.cur = 0; s.start = 0; s.over = false; s.winner = null; s.phase = 'setup';
-      s.trapSeq = 1; s.limbo = [];
+      s.trapSeq = 1; s.limbo = []; s.lastDmgRound = 1;
       for (let i = 0; i < N; i++) this.stats.p.push({});
       if (cfg.give) for (const k in cfg.give) for (const id of cfg.give[k]) this._giveStart(+k, id);
       return s;

@@ -1,9 +1,9 @@
 # Da ricordare — misure, note di bilanciamento, cose da guardare al playtest
 
-Tutte le misure sono fatte col **simulatore** (`node tools/sim.js …`), con l'AI *difficile* contro sé stessa salvo diversa indicazione, posti e profili ruotati in modo bilanciato, **intervalli di confidenza al 95%** (Wilson). Sono misure di *questa* versione di regole e di AI: se cambia una regola o l'AI vanno rifatte. **Nessuna regola è stata cambiata per rimediare a quello che trovo qui sotto: sono segnalazioni, la decisione è tua.**
+Tutte le misure sono fatte col **simulatore** (`node tools/sim.js …`), con l'AI *difficile* contro sé stessa salvo diversa indicazione, posti e profili ruotati in modo bilanciato, **intervalli di confidenza al 95%** (Wilson, tra parentesi o tra quadre). Sono misure di *questa* versione di regole e di AI: se cambia una regola o l'AI vanno rifatte. **Nessuna regola è stata cambiata per rimediare a quello che trovo qui sotto: sono segnalazioni, la decisione è tua.** Le varianti che ho aggiunto sono spente di default e servono solo a misurare (`punchMax`, `shelterLimit`).
 
 ## 1. Obiettivi di bilanciamento (proposti, da confermare)
-1. Nessun posto di turno sopra "1/N + 10 punti" (per esempio con 3 giocatori nessun posto oltre il 43%).
+1. Nessun posto di turno oltre "1/N + 10 punti" (con 3 giocatori nessun posto oltre il 43%).
 2. L'abilità conta: AI difficile > media > facile, in modo netto.
 3. Le strategie sbagliate di proposito (non attaccare mai, scelte a caso, solo rifugio, solo attacco) non devono battere la media.
 4. Durata della partita: **da decidere insieme** (non mi hai ancora detto il massimo accettabile al tavolo: 60–90 minuti?).
@@ -11,61 +11,78 @@ Tutte le misure sono fatte col **simulatore** (`node tools/sim.js …`), con l'A
 
 ## 2. Durata e vantaggio di posto (AI difficile contro sé stessa, 120 partite per numero di giocatori)
 
-| Giocatori | Round: media | mediana | 10° – 90° perc. | max | partite > 100 round | Vince il posto 1 (atteso) |
-|---|---|---|---|---|---|---|
-| 2 | 46 | 32 | 17 – 54 | 401 (limite) | 5,0% (4 interrotte al limite) | 54% (50%) |
-| 3 | 21 | 18 | 6 – 32 | 336 | 0,8% | 36% (33%) |
-| 4 | 11 | 7 | 2 – 27 | 53 | 0% | 27% (25%) |
-| 5 | 11 | 9 | 3 – 22 | 46 | 0% | 13% (20%) |
-| 6 | 12 | 7 | 2 – 29 | 41 | 0% | 11% (17%) con IC 6–18% |
+| Giocatori | Round: media | mediana | 10° – 90° perc. | partite > 100 round | interrotte al limite (400) | Vince il posto 1 (atteso) | Vince l'**ultimo** posto (atteso) |
+|---|---|---|---|---|---|---|---|
+| 2 | 46 | 32 | 18 – 61 | 5,0% | 3 | 52% [43–60] (50%) | 46% [37–55] |
+| 3 | 25 | 18 | 8 – 31 | 1,7% | 2 | 27% [20–35] (33%) | 39% [31–48] |
+| 4 | 14 | 11 | 3 – 31 | 0% | 0 | 26% [19–34] (25%) | 24% [17–33] |
+| 5 | 16 | 10 | 3 – 29 | 0,8% | 1 | 14% [9–22] (20%) | 26% [19–34] |
+| 6 | 13 | 11 | 3 – 28 | 0% | 0 | 9% [5–16] (17%) | **36% [28–45]** (17%) |
 
-Un round = un turno per tutti. Con 4–6 giocatori **la partita finisce di solito in meno di 10 round**: il primo livello della mappa (round 11) spesso non fa in tempo a sparire. Con 2–3 giocatori ci sono i rientri e la partita dura molto di più.
-Vantaggio di posto: con 6 giocatori l'**ultimo** posto vince il 28% delle partite (IC 21–37%, atteso 17%); con 2 giocatori chi inizia vince il 54% (IC 45–63%, quindi non è dimostrato). Da rimisurare con più partite prima di fare conclusioni.
+Un round = un turno per tutti. Con 4–6 giocatori **la partita finisce di solito in circa 10 round**: il primo livello della mappa (round 11) spesso non fa in tempo a sparire. Con 2–3 giocatori ci sono i rientri e la partita dura molto di più.
+**Vantaggio di posto:** con 6 giocatori l'**ultimo** posto vince il 36% delle partite (atteso 17%, intervallo 28–45%): è una differenza netta; il primo posto vince solo il 9%. Con 3 e 5 giocatori l'ultimo posto tende a vincere di più. Probabile causa: nel primo round tutti corrono alla stessa tessera Equipaggiamento e si picchiano, e chi gioca per ultimo trova gli altri già feriti.
 
 ## 3. L'abilità conta? (3 giocatori, 90 partite, posti e profili ruotati)
 
 | Prova | Risultato | Atteso |
 |---|---|---|
-| difficile / media / facile | **61% / 33% / 6%** (IC difficile 51–70%) | 33% ciascuno |
-| 2 difficili + **non attacca mai** | non attacca mai **9%** (IC 5–17%) | 33% |
-| 2 difficili + **a caso** | a caso **6%** (IC 2–12%) | 33% |
-| 2 difficili + **solo attacco** | solo attacco **27%** (IC 19–37%) | 33% |
-| 2 difficili + **solo rifugio** | solo rifugio **38%** (IC 28–48%) | 33% |
-| 1 difficile contro **solo rifugio**, 2 giocatori (100 partite) | difficile 79%, solo rifugio **16%** (IC 10–24%), 5 interrotte al limite | 50% |
+| difficile / media / facile | **58% / 39% / 3%** (IC difficile 48–68%) | 33% ciascuno |
+| 2 difficili + **non attacca mai** | non attacca mai **4%** (IC 2–11%) | 33% |
+| 2 difficili + **a caso** | a caso **4%** (IC 2–11%) | 33% |
+| 2 difficili + **solo attacco** | solo attacco **19%** (IC 12–28%) | 33% |
+| 2 difficili + **solo rifugio** | solo rifugio **39%** (IC 30–49%) | 33% |
+| 1 difficile contro **solo rifugio**, 2 giocatori (100 partite) | difficile 79%, solo rifugio **17%** (IC 11–26%) | 50% |
 
-Lettura: livelli ben distinti e le strategie davvero sbagliate perdono. Ma **"solo rifugio" non perde con 3 giocatori** (si fa portare la vittoria dagli altri due che si combattono: è il classico "terzo incomodo" dei battle royal), e "solo attacco" quasi pareggia con l'AI difficile: la sfida 2D6 contro 2D6 lascia molto alla fortuna.
+Lettura: i livelli sono distinti e le strategie davvero sbagliate perdono. Ma **"solo rifugio" non perde con 3 giocatori**: si fa portare la vittoria dagli altri due che si combattono (il classico "terzo incomodo" dei battle royal), e la differenza fra AI difficile e media è meno marcata che fra media e facile: la sfida 2D6 contro 2D6 lascia molto alla fortuna.
 
 ## 4. Possibili buchi di regola (misurati, da decidere)
 
-1. **Il pugno è gratis e illimitato** (Gittata 0, danno 1, colpi ∞, costa 0 mana, se perdi subisci 1). Colpisce il 58% delle volte (pareggio all'attaccante), quindi ogni pugno ha valore atteso positivo e conviene sempre spammarlo. Nel primo round tutti corrono alla stessa tessera Equipaggiamento e fanno a pugni: partite da 4 giocatori lunghe in media **11 round (mediana 7)**, il 10% finisce entro 2 round. Con il parametro `punchMax` (pugni massimi per turno, 0 = illimitati):
+1. **Il pugno è gratis e illimitato** (gittata 0, danno 1, colpi ∞, costa 0 mana, se perdi subisci 1). Colpisce il 58% delle volte (pareggio all'attaccante), quindi ogni pugno ha valore atteso positivo e conviene spammarlo. Nel primo round tutti corrono alla stessa tessera e fanno a pugni: in un log un giocatore ha dato **25 pugni in un solo turno**. Con il parametro `punchMax` (pugni massimi per turno, 0 = illimitati), 4 giocatori, 100 partite:
 
-   | punchMax | round medi (mediana), 4 giocatori, 100 partite |
-   |---|---|
-   | 0 (regola attuale) | 11,7 (7) |
-   | 1 | 36,5 (30) |
-   | 2 | 32,8 (28) |
-   | 3 | 25,1 (24) |
+   | punchMax | round medi (mediana) | oltre 100 round | primo posto |
+   |---|---|---|---|
+   | 0 (regola attuale) | 14,9 (12) | 0% | 24% |
+   | 1 | 37,4 (30) | 2% | 33% |
+   | 2 | 32,7 (28) | 2% | 32% |
+   | 3 | 25,7 (24) | 1% | 27% |
 
-   Si prova dall'app: *Parametri delle regole → Pugni max per turno*, oppure `node tools/sim.js --players 4 --a hard --experiment punchMax=0,1,2,3`.
-2. **Stallo nei rifugi.** Dentro un Rifugio non si subiscono né si danno attacchi, e si prende 1 moneta a ogni cambio giornata. Un giocatore che resta fermo in un rifugio non si può dislodgere (se non con la Tempesta Imminente). Nelle partite 2 giocatori il 5% supera 100 round e il 3% arriva al **limite di 400 round** senza vincitore; con 3 giocatori si è visto un caso da 336 round. Nel log: due giocatori che oscillano fra due rifugi senza mai attaccarsi.
-3. **La Plancia Tempo conta poco** con 4–6 giocatori (la partita finisce prima del round 11) e **moltissimo** con 2–3 (dopo il livello 3 restano 7 tessere e si ricomincia a giocare con 1D6). Se vuoi che il restringimento della mappa sia protagonista, le giornate (5-4-3) vanno ridotte o il pugno limitato.
-4. **Personaggi** (AI difficile, casuali, tutte le partite sommate: 600 partite). Rapporto fra vittorie osservate e attese: Hatci **1,51** (89 contro 59 attese), Mia Ika 1,19, Lasep 1,08, Soshito 1,05, God_Nocy 1,05, Kone 0,95, Ricca 0,90, Karou 0,81, **Sejhnam 0,68**, **’Nganga 0,67**. Attenzione: dipende anche da come l'AI usa le Ulti; per 'Nganga e Mia Ika (Ulti "reattive") e per Sejhnam la stima è meno affidabile.
-5. **Carico mentale al tavolo** (segnalato come chiedi): (a) il costo degli attacchi cresce *per arma e per turno* (0-1-2-3, 1-3, 1-4): bisogna ricordare quanti attacchi con ciascuna arma; (b) con vantaggio/svantaggio si tirano 3 dadi e se ne scartano 1; (c) i pugni illimitati significano decine di tiri a turno; (d) bottino, rientri, mod e progetti sono molti oggetti da tracciare; (e) le Ulti hanno molti casi (giorno/notte). Il resto (somme e confronti) è leggero.
+   Si prova dall'app (*Parametri delle regole → Pugni max per turno*) o con `node tools/sim.js --players 4 --a hard --experiment punchMax=0,1,2,3`.
+2. **Stallo nei rifugi — è strutturale.** Dentro un Rifugio non si subiscono danni da nessuna fonte esterna (attacchi, Colpo Distruttivo, Tempesta Imminente, Pioggia acida di giorno…): **nessuna carta può dislodgere chi ci sta** (l'unica eccezione è la Pioggia acida di notte di Lasep, 1 danno a tutti anche nei rifugi). Se tutti i giocatori rimasti si mettono nei rifugi la partita non finisce più: visto più volte nei log (tre giocatori che oscillano fra due rifugi per 400 round, tutti a 10 PV). Frequenza: con 2 giocatori il 5% supera 100 round e il 2,5% arriva al limite, con 3 giocatori l'1,7%. Provato:
+   - `rifugioCoins = 0` (niente moneta nei rifugi): **nessun effetto** (4,2% → 4,2%), quindi non sono le monete;
+   - variante `shelterLimit` (dopo N turni di fila in un Rifugio il movimento successivo non può finire in un Rifugio):
+
+   | shelterLimit | 2 giocatori: oltre 100 round / limite | 3 giocatori: oltre 100 round / limite | round medi (2p / 3p) |
+   |---|---|---|---|
+   | 0 (regola attuale) | 5,0% / 3 | 1,7% / 2 | 46 / 25 |
+   | 2 | 2,5% / 0 | 0% / 0 | 34 / 16 |
+   | 3 | 1,7% / 0 | 0% / 0 | 35 / 18 |
+
+   Cambia poco la forza relativa dei profili. Altre strade possibili (non provate): la Plancia Tempo toglie anche i rifugi quando restano i livelli 1–2; una Tempesta che colpisce anche i rifugi; il rifugio protegge solo per N turni.
+3. **La Plancia Tempo conta poco** con 4–6 giocatori (la partita finisce intorno al round 10–15, il livello 5 salta al round 11) e **moltissimo** con 2–3 (dopo il livello 3 restano 7 tessere e si gioca a 1D6). Se vuoi che il restringimento della mappa sia protagonista, le giornate (5-4-3) vanno ridotte o il pugno limitato.
+4. **Vantaggio dell'ultimo di turno** (vedi §2): 36% con 6 giocatori, 39% con 3.
+5. **Personaggi** (AI difficile, scelti a caso, 600 partite sommate). Rapporto fra vittorie osservate e attese: Hatci **1,66** (98 contro 59 attese), Lasep 1,24, Mia Ika 1,13, Soshito 1,11, God_Nocy 0,90, ’Nganga 0,87, Sejhnam 0,85, Kone 0,84, **Karou 0,67**, **Ricca Gigaduca 0,67**. Attenzione: dipende anche da come l'AI usa le Ulti; per ’Nganga e Mia Ika (Ulti "reattive") e per Sejhnam la stima è meno affidabile. Hatci (+1 danno su tutto) e Lasep (vantaggio sempre) hanno passive molto forti in un gioco in cui si lanciano molti attacchi.
+6. **Carico mentale al tavolo** (segnalato come chiedi): (a) il costo degli attacchi cresce *per arma e per turno* (0-1-2-3, 1-3, 1-4): bisogna ricordare quanti attacchi con ciascuna arma; (b) con vantaggio/svantaggio si tirano 3 dadi e se ne scartano 1; (c) i pugni illimitati significano decine di tiri a turno; (d) bottino, rientri, mod e progetti sono molti oggetti da tracciare; (e) le Ulti hanno molti casi (giorno/notte); (f) la Plancia Tempo conta 24 cambi giornata. Il resto (somme e confronti) è leggero.
 
 ## 5. Cose da riguardare al playtest (interpretazioni mie)
-Vedi le voci **[interpretazione]** del regolamento. Le più importanti: raggio e spinta dell'Onda di God_Nocy; difesa reattiva di ’Nganga (come funziona il tiro); nuvola tossica di Sejhnam (dove, quanto dura); seguaci di Kone (dove, quanto restano); Hatci di giorno (cosa si "lancia"); costo in mana di Cibo/Medikit (ora 1); la Tempesta Imminente colpisce anche chi la usa; Zaino (+2 per ogni risorsa); inventario dei progetti (1 per tipo) e delle carte speciali (2); quando il Fastidio ruba il cubetto va perso; monete iniziali 0; ordine di turno fisso per posto.
+Vedi le voci **[interpretazione]** del regolamento. Le più importanti: raggio e spinta dell'Onda di God_Nocy; difesa reattiva di ’Nganga (come funziona il tiro); nuvola tossica di Sejhnam (dove, quanto dura); seguaci di Kone (dove, quanto restano); Hatci di giorno (cosa si "lancia"); costo in mana di Cibo/Medikit (ora 1); la Tempesta Imminente colpisce anche chi la usa; Zaino (+2 per ogni risorsa); inventario dei progetti (1 per tipo) e delle carte speciali (2); quando il Fastidio ruba il cubetto va perso; monete iniziali 0; ordine di turno fisso per posto; rivendita del bottino (solo finché il proprietario è in attesa di rientrare); le Skill/effetti che tolgono il mana agli avversari (si ferma a 0).
 
 ## 6. Domande aperte per te
 1. Durata massima accettabile della partita al tavolo (per fissare l'obiettivo n. 4)?
 2. Vuoi tenere il pugno gratis e illimitato (come regolamento) o provo un limite per turno?
-3. Come vuoi trattare il Rifugio (stallo)? Per esempio: niente moneta se resti più di N turni, oppure una Tempesta ricorrente… Dimmelo e lo misuro.
+3. Come vuoi trattare il Rifugio (stallo)? Ho misurato la variante "al massimo N turni di fila"; altre idee le misuro volentieri.
 4. Le giornate 5-4-3 sono quelle giuste? (Non ricordavi bene: restano parametro.)
-5. La rivendita del bottino al rientrante (vedi `DA_IMPLEMENTARE.md`): quando si può fare?
+5. Vantaggio dell'ultimo di turno: vuoi che provi un ordine di turno diverso (per esempio casuale a ogni round o il vincitore dei dadi che inizia)?
 
-## 7. Come rifare le misure
+## 7. Cosa è cambiato nell'AI durante questa tappa (letti i log di partite difficile contro difficile)
+- Non fa più attacchi "suicidi": un contraccolpo (pugno perso, corpo a corpo) che può ucciderla pesa molto, e pesa di più quando ha pochi PV.
+- Cerca i bersagli esposti (soprattutto feriti) e considera i rifugi poco attraenti quando sta bene; dopo molti round senza danni il timore cala.
+- Non resta fermo ad aspettare per sempre se qualcuno è esposto: ma se *tutti* sono nei rifugi non c'è nulla da fare (vedi §4.2).
+
+## 8. Come rifare le misure
 ```
 node tools/sim.js --games 120 --players 4 --a hard --out report.md --json report.json
 node tools/sim.js --games 90 --players 3 --a hard --b hard --c camper     # prove estreme (anche pacifist, rusher, random)
 node tools/sim.js --games 100 --players 4 --a hard --experiment punchMax=0,1,2,3
+node tools/sim.js --games 120 --players 2 --a hard --experiment shelterLimit=0,2,3
 node tools/sim.js --games 60 --players 3 --a medium --effects 60          # resa di ogni carta forzata
 ```

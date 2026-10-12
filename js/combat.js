@@ -229,6 +229,7 @@
       }
     }
     p.hp -= rem;
+    if (rem > 0) s.lastDmgRound = s.round;
     this.stat('damageTaken', pid, rem);
     if (opts.src != null && opts.src !== pid) this.stat('damageDealt', opts.src, rem);
     const b = this.say('damage', `💔 ${this.pn(pid)} subisce ${rem} ${rem === 1 ? 'danno' : 'danni'}${note.length ? ' (' + note.join(', ') + ')' : ''} → ${Math.max(0, p.hp)} PV.`, pid, { amt: rem, reason: opts.reason });
