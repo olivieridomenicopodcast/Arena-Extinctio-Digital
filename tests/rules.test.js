@@ -615,3 +615,17 @@ test('muri: i lati bloccati di ogni tessera Muro coincidono con i mattoni disegn
   assert.ok(g.wallBetween(at(0, 0), 0) && g.wallBetween(at(0, 0), 3), 'muro sopra e sotto');
   assert.ok(!g.wallBetween(at(0, 0), 1) && !g.wallBetween(at(0, 0), 2) && !g.wallBetween(at(0, 0), 4) && !g.wallBetween(at(0, 0), 5));
 });
+
+test('trappola: se l’uscita di un portale ha un segnalino Trappola ci si ferma lì (non si prosegue)', () => {
+  // portale A in (1,0), altro A in (-3,2) con un segnalino Trappola di un altro giocatore
+  const g = mk(2, { layout: layout({ [at(1, 0)]: 32, [at(-3, 2)]: 33 }) });
+  place(g, 0, 0, 0); prep(g, 0);
+  const exitTile = g.s.cells[at(-3, 2)].tile;
+  g.s.traps.push({ id: 1, kind: 'trap', tile: g.pl(1).at, owner: 1, hp: 4, marks: [exitTile] });
+  const mo = g.movementOptions(0, 4);
+  const stopHere = mo.ends.find((e) => e.cell === at(-3, 2));
+  assert.ok(stopHere && stopHere.stop, 'ci si può arrivare solo fermandosi sull’uscita');
+  assert.ok(!mo.ends.some((e) => e.path.includes(at(-3, 2)) && e.cell !== at(-3, 2)), 'nessun cammino prosegue oltre l’uscita segnalata');
+  drive(g.walk(0, stopHere.path, stopHere.cell));
+  assert.strictEqual(g.pl(0).turn.slowed, true);
+});

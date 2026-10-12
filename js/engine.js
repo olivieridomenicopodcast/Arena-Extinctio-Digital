@@ -403,7 +403,7 @@
           const b = NB[a][d];
           if (stopOn(b)) { if (!stops.has(b)) stops.set(b, k); continue; }
           const ex = exitsOf(b);
-          if (ex) { for (const e of ex) nxt.add(e); } else nxt.add(b);
+          if (ex) { for (const e of ex) { if (stopOn(e)) { if (!stops.has(e)) stops.set(e, k); } else nxt.add(e); } } else nxt.add(b);   // se l'uscita del portale ha un segnalino Trappola ti fermi lì
         }
         layers.push(nxt);
       }
@@ -446,6 +446,10 @@
             visited.add(b);
             for (const e of ex) {
               if (visited.has(e)) continue;
+              if (o.stopOn(e)) {      // uscita del portale con un segnalino Trappola: ti fermi lì
+                if (e === target && o.isStop) { path.push(b, e); return true; }
+                continue;
+              }
               visited.add(e); path.push(b, e);
               if (rem - 1 === 0) { if (e === target) return true; }
               else if (dfs(e, rem - 1)) return true;
