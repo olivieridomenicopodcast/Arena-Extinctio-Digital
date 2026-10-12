@@ -157,7 +157,7 @@
     }
     if (t.heal && p.hp < this.rules.healthCap) {
       const n = this.heal(pid, 2);
-      if (n) { b = this.say('heal', `💚 ${this.pn(pid)} recupera ${n} PV.`, pid); if (b) yield b; }
+      if (n) { b = this.say('heal', `💚 ${this.pn(pid)} recupera ${n} PV.`, pid, { n }); if (b) yield b; }
     }
   };
   G.activateCards = function* (pid) {
@@ -316,7 +316,7 @@
     let n = AE.MATERIALS[o.card.slice(4)].heal;
     if (p.char === 'ricca' && o.card === 'mat:medikit') { n += Math.min(1, Math.max(0, R.healthCap - p.hp - n)); }
     const got = this.heal(pid, n);
-    const b = this.say('heal', `💚 ${this.pn(pid)} usa ${AE.cardName(o.card)} e recupera ${got} PV (${p.hp}).`, pid); if (b) yield b;
+    const b = this.say('heal', `💚 ${this.pn(pid)} usa ${AE.cardName(o.card)} e recupera ${got} PV (${p.hp}).`, pid, { n: got }); if (b) yield b;
   };
 
   // ───────────── Skill ─────────────
@@ -373,7 +373,7 @@
       case 'teletrasporto': {
         const c = yield* this.choose(pid, 'cell', 'Teletrasporto Corto: dove vai?', o.cells.map((i) => ({ cell: i, label: `${AE.tile(s.cells[i].tile).name} (#${s.cells[i].tile})` })), { force: true });
         p.at = s.cells[c.cell].tile;
-        b = this.say('skill', `✨ ${this.pn(pid)} si teletrasporta su ${AE.tile(p.at).name} (#${p.at}).`, pid); if (b) yield b;
+        b = this.say('skill', `✨ ${this.pn(pid)} si teletrasporta su ${AE.tile(p.at).name} (#${p.at}).`, pid, { tile: p.at }); if (b) yield b;
         const h = this._touch(pid, c.cell); if (h) yield* h;
         if (p.status === 'alive' && !s.over) yield* this.activate(pid);
         break;

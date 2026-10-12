@@ -486,3 +486,12 @@ test('fuzz: 30 partite casuali (2-6 giocatori) senza errori, carte mai perse né
     assert.ok(g.result);
   }
 });
+
+test('Ulti di Hatci: solo in linea retta, i muri non fermano, l’insormontabile sì, il primo corpo ferma', () => {
+  const g = mk(3, { layout: layout(), chars: ['hatci', 'karou', 'ricca'] });
+  place(g, 0, 0, 0); place(g, 1, 2, -2); place(g, 2, 1, 1);
+  const ids = () => g.ultiTargets(0).map((q) => q.id).sort();
+  assert.deepStrictEqual(ids(), [1], '(2,-2) è in linea, (1,1) no');
+  place(g, 2, 0, 3); place(g, 1, 0, 2);
+  assert.deepStrictEqual(ids(), [1], 'il primo corpo copre quello dietro');
+});

@@ -149,8 +149,8 @@
       win = ra.sum >= rd.sum;
     }
     const dist = t.dist === 0 ? 'stessa tessera' : `a ${t.dist} tessere`;
-    if (mira) b = this.say('attack', `🎯 ${this.pn(pid)} attacca ${this.pn(q.id)} con ${st.name} (${dist}): Mira Perfetta, colpo infallibile.`, pid);
-    else b = this.say('attack', `⚔ ${this.pn(pid)} attacca ${this.pn(q.id)} con ${st.name} (${dist}). Attaccante ${dtxt(ra)}${ra.mode !== 'normale' ? ' [' + ra.mode + ']' : ''} · difensore ${dtxt(rd)}${rd.mode !== 'normale' ? ' [' + rd.mode + ']' : ''}. ${win ? 'Colpito!' : 'Mancato.'}`, pid, { ra, rd, win });
+    if (mira) b = this.say('attack', `🎯 ${this.pn(pid)} attacca ${this.pn(q.id)} con ${st.name} (${dist}): Mira Perfetta, colpo infallibile.`, pid, { tgt: q.id, dist: t.dist, win: true, mira: true });
+    else b = this.say('attack', `⚔ ${this.pn(pid)} attacca ${this.pn(q.id)} con ${st.name} (${dist}). Attaccante ${dtxt(ra)}${ra.mode !== 'normale' ? ' [' + ra.mode + ']' : ''} · difensore ${dtxt(rd)}${rd.mode !== 'normale' ? ' [' + rd.mode + ']' : ''}. ${win ? 'Colpito!' : 'Mancato.'}`, pid, { ra, rd, win, tgt: q.id, dist: t.dist });
     if (b) yield b;
     if (win) {
       let dmg = st.dan;
@@ -232,7 +232,7 @@
     if (rem > 0) s.lastDmgRound = s.round;
     this.stat('damageTaken', pid, rem);
     if (opts.src != null && opts.src !== pid) this.stat('damageDealt', opts.src, rem);
-    const b = this.say('damage', `💔 ${this.pn(pid)} subisce ${rem} ${rem === 1 ? 'danno' : 'danni'}${note.length ? ' (' + note.join(', ') + ')' : ''} → ${Math.max(0, p.hp)} PV.`, pid, { amt: rem, reason: opts.reason });
+    const b = this.say('damage', `💔 ${this.pn(pid)} subisce ${rem} ${rem === 1 ? 'danno' : 'danni'}${note.length ? ' (' + note.join(', ') + ')' : ''} → ${Math.max(0, p.hp)} PV.`, pid, { amt: rem, reason: opts.reason, src: opts.src });
     if (b) yield b;
     if (p.hp <= 0) yield* this.eliminate(pid, opts.src);
     return rem;
@@ -289,7 +289,7 @@
       const k = this.pl(killer);
       k.kills++; this.stat('kills', killer);
       this._addCoins(killer, R.killCoins);
-      b = this.say('coins', `💰 ${this.pn(killer)} guadagna ${R.killCoins} monete.`, killer); if (b) yield b;
+      b = this.say('coins', `💰 ${this.pn(killer)} guadagna ${R.killCoins} monete.`, killer, { n: R.killCoins }); if (b) yield b;
       const lt = s.loot.find((l) => l.tile === tile && l.owner === pid);
       if (lt && lt.items.length) {
         const opt = yield* this.choose(killer, 'steal', `Prendi 1 carta dal bottino di ${p.name}`, lt.items.map((it) => ({ item: it, label: this.lootName(it) })).concat([{ item: null, label: 'Niente' }]), { force: true, victim: pid });
@@ -347,7 +347,26 @@
   };
 
   // ───────────── Ulti ─────────────
-  G.ultiTargets = function (pid) { return this.s.players.filter((q) => q.id !== pid && q.status === 'alive' && !this.inShelter(q.id)); };
+  // Missile di Hatci: va in linea retta nelle 6 direzioni senza limite di gittata, i muri NON lo fermano,
+  // lo fermano le tessere Insormontabili e il primo corpo incontrato (come un proiettile); stessa tessera compresa.
+  G.ultiTargets = function (pid) {
+    const s = this.s, ci = this.cellOfPlayer(pid), out = [];
+    if (ci < 0) return out;
+    const here = this.pl(pid).at;
+    for (const q of s.players) if (q.id !== pid && q.status === 'alive' && q.at === here && !this.inShelter(q.id)) out.push(q);
+    for (let d = 0; d < 6; d++) {
+      let cur = ci;
+      for (;;) {
+        const nx = NB[cur][d];
+        if (nx < 0 || !this.shootable(nx)) break;
+        cur = nx;
+        const tid = s.cells[cur].tile;
+        const hit = s.players.filter((q) => q.id !== pid && q.status === 'alive' && q.at === tid);
+        if (hit.length) { hit.forEach((q) => { if (!this.inShelter(q.id) && !out.includes(q)) out.push(q); }); break; }
+      }
+    }
+    return out;
+  };
   G.canUlti = function (pid) {
     const p = this.pl(pid);
     if (!p.ultiHeld || p.mana < this.rules.ultiMana || p.turn.moveOnly) return false;
@@ -430,7 +449,7 @@
         const miss = R.healthCap - p.hp;
         const n = this.isDay() ? Math.ceil(miss / 2) : miss;
         const got = this.heal(pid, n);
-        b = this.say('heal', `💚 ${this.pn(pid)} recupera ${got} PV.`, pid); if (b) yield b;
+        b = this.say('heal', `💚 ${this.pn(pid)} recupera ${got} PV.`, pid, { n: got }); if (b) yield b;
         break;
       }
       case 'sejhnam': {

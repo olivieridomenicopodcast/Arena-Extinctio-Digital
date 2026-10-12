@@ -496,7 +496,7 @@
         if (h) yield* h;
         if (s.over || p.status !== 'alive') return;
       }
-      const b = this.say('arrive', `📍 ${this.pn(pid)} si ferma su ${AE.tile(p.at).name} (#${p.at}).`, pid, { tile: p.at });
+      const b = this.say('arrive', `📍 ${this.pn(pid)} si ferma su ${AE.tile(p.at).name} (#${p.at}).`, pid, { tile: p.at, path: p.turn.path.slice() });
       if (b) yield b;
     }
     // effetti di una tessera appena toccata (generator o null)
@@ -606,7 +606,7 @@
       s.cells.forEach((c, i) => { if (c.tile && AE.CELLS[i].level === lvl) { gone.push(c.tile); s.removedTiles.push(c.tile); c.tile = null; } });
       const next = R.levelDays[s.removedLevels];
       s.nextRemoval = next ? s.periodIdx + next * R.periodsPerDay : 1e9;
-      let b = this.say('level', `⬛ Il livello ${lvl} della mappa viene rimosso (${gone.length} tessere).`);
+      let b = this.say('level', `⬛ Il livello ${lvl} della mappa viene rimosso (${gone.length} tessere).`, null, { tiles: gone.slice(), lvl });
       if (b) yield b;
       // gli effetti legati alle tessere rimosse
       s.traps = s.traps.filter((t) => !gone.includes(t.tile)); s.traps.forEach((t) => { t.marks = t.marks.filter((m) => !gone.includes(m)); });
