@@ -125,8 +125,8 @@
     const pts = P.map((ci) => UI.cellXY(ci).map((v) => v.toFixed(1)).join(',')).join(' ');
     const trail = mk('polyline', { points: pts, fill: 'none', stroke: '#00ffc8', 'stroke-width': 7, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: 0 }, fx);
     fx.insertBefore(trail, L.el);
-    const prom = [run(L.el, kf, { duration: Math.max(250, n * 160) * k, easing: 'linear' }),
-      run(trail, [{ opacity: 0.5 }, { opacity: 0.5, offset: 0.6 }, { opacity: 0 }], { duration: (n * 160 + 500) * k })];
+    const prom = [run(L.el, kf, { duration: Math.max(600, n * 420) * k, easing: 'linear' }),
+      run(trail, [{ opacity: 0.5 }, { opacity: 0.5, offset: 0.6 }, { opacity: 0 }], { duration: (n * 420 + 600) * k })];
     portals.forEach((ci) => prom.push(ring(fx, UI.cellXY(ci), '#ff5ad7', k, 3)));
     A.active.push(L.h);
     return Promise.all(prom).then(() => { L.back(); const i = A.active.indexOf(L.h); if (i >= 0) A.active.splice(i, 1); });
@@ -140,7 +140,7 @@
     if (d > 260) {                                  // teletrasporto / rientro lontano: svanisce e riappare
       L.el.style.transformBox = 'fill-box'; L.el.style.transformOrigin = 'center';
       p = Promise.all([run(L.el, [{ transform: T(from[0] - to[0], from[1] - to[1]) + ' scale(1)', opacity: 1 }, { transform: T(from[0] - to[0], from[1] - to[1]) + ' scale(.2)', opacity: 0, offset: 0.4 }, { transform: T(0, 0) + ' scale(.2)', opacity: 0, offset: 0.5 }, { transform: T(0, 0) + ' scale(1)', opacity: 1 }], { duration: 800 * k }), ring(fx, from, '#9d7bff', k, 3), ring(fx, to, '#9d7bff', k, 3)]);
-    } else p = run(L.el, [{ transform: T(from[0] - to[0], from[1] - to[1]) }, { transform: T(0, 0) }], { duration: Math.max(250, d * 2.2) * k, easing: 'ease-in-out' });
+    } else p = run(L.el, [{ transform: T(from[0] - to[0], from[1] - to[1]) }, { transform: T(0, 0) }], { duration: Math.max(500, d * 4.5) * k, easing: 'ease-in-out' });
     return p.then(() => { L.back(); const i = A.active.indexOf(L.h); if (i >= 0) A.active.splice(i, 1); });
   }
 

@@ -164,6 +164,7 @@
     renderStatus() {
       const g = this.game, s = g.s, st = $('#status'); if (!st) return;
       const day = s.period === 'day';
+      const bw = $('#boardWrap'); if (bw) { bw.classList.toggle('isday', day); bw.classList.toggle('isnight', !day); }
       const left = s.removedLevels >= 3 ? null : Math.max(0, s.nextRemoval - s.periodIdx);
       const cur = s.players[s.cur];
       st.innerHTML = '';
@@ -280,10 +281,10 @@
       const sel = {}; d.options.forEach((o) => { sel[o.cell] = viaPortal(o) ? 'selp' : AE.cellDist(start, o.cell) === d.steps ? 'sel' : 'selw'; }); this.sel = sel;
       const byCell = {}; d.options.forEach((o, i) => { byCell[o.cell] = i; });
       this.onHover = (ci) => { if (byCell[ci] != null) { this.path = [g.cellOfPlayer(d.pid)].concat(d.options[byCell[ci]].path); this.refresh(d); this.sel = sel; UI.renderBoard($('#board'), g, { sel, cur: d.pid, path: this.path, hint: this.hintCell }); } };
-      this.onCell = (ci) => { if (byCell[ci] != null) this.confirmThen(null, () => done(byCell[ci])); };
+      this.onCell = (ci) => { if (byCell[ci] != null) this.confirmThen({ kind: 'move', label: d.options[byCell[ci]].label }, () => done(byCell[ci])); };
       hintBtn(() => { const i = this.suggest(d); this.hintCell = d.options[i].cell; UI.renderBoard($('#board'), g, { sel, cur: d.pid, hint: this.hintCell }); $('#hintTxt').textContent = `Suggerisco: ${d.options[i].label}`; });
       const list = h('div', { class: 'cardrow' });
-      d.options.forEach((o, i) => { const t = AE.tile(o.tile); const threat = AE.AI.threatAt(g, d.pid, o.cell); list.append(h('button', { class: 'btn small', title: AE.TILE_TYPES[t.type].d, onmouseenter: () => this.onHover(o.cell), onclick: () => done(i) }, `${AE.TILE_TYPES[t.type].i} ${o.label}${threat > 1.5 ? ' ⚠' : ''}${o.stop ? ' 🕸' : ''}${viaPortal(o) ? ' 🌀' : ''}`)); });
+      d.options.forEach((o, i) => { const t = AE.tile(o.tile); const threat = AE.AI.threatAt(g, d.pid, o.cell); list.append(h('button', { class: 'btn small', title: AE.TILE_TYPES[t.type].d, onmouseenter: () => this.onHover(o.cell), onclick: () => this.confirmThen({ kind: 'move', label: o.label }, () => done(i)) }, `${AE.TILE_TYPES[t.type].i} ${o.label}${threat > 1.5 ? ' ⚠' : ''}${o.stop ? ' 🕸' : ''}${viaPortal(o) ? ' 🌀' : ''}`)); });
       panel.append(h('details', {}, h('summary', { class: 'small dim' }, 'Elenco delle destinazioni'), list));
       this.refresh(d); UI.renderBoard($('#board'), g, { sel, cur: d.pid });
     }
@@ -368,8 +369,9 @@
       else if (o.kind === 'skill' && ['tempesta', 'colpo', 'repeat', 'trappola'].includes(o.skill)) warn = `${AE.cardName(o.card)} ${o.skill === 'tempesta' ? 'colpisce anche te se non sei in un rifugio' : 'è una carta usa e getta'}: confermi?`;
       else if (o.kind === 'attack') { const st = g.weaponStats(pid, o.slot); if (st.fal > 0 || o.slot === 'fist') warn = `Se perdi la sfida subisci ${st.fal} danni (hai ${p.hp} PV).`; else if (o.target.kind === 'player' && g.pl(o.target.pid).char === 'nganga' && g.pl(o.target.pid).ultiHeld) warn = '’Nganga ha l’Ulti pronta: potrebbe difendersi e farti male.'; }
       else if (o.kind === 'end') warn = o.note;
+      else if (o.kind === 'move') warn = `Ti fermi su ${o.label}?`;
       if (!warn) return fn();
-      const m = UI.modal.open(h('div', {}, h('h3', {}, '⚠ Conferma'), h('p', {}, warn), h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: () => { UI.modal.close(); fn(); } }, 'Sì, procedi'), h('button', { class: 'btn', onclick: () => UI.modal.close() }, 'Annulla'))), { lock: false });
+      const m = UI.modal.open(h('div', {}, h('h3', {}, '⚠ Conferma'), h('p', {}, warn), h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: () => { UI.modal.close(); fn(); } }, o.kind === 'move' ? 'Sì, vai' : 'Sì, procedi'), h('button', { class: 'btn', onclick: () => UI.modal.close() }, 'Annulla'))), { lock: false });
     }
 
     // ───────────── fine partita ─────────────

@@ -38,7 +38,7 @@ label{display:flex;gap:8px;align-items:center}
 #status{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 12px;margin-bottom:8px}
 #status .pill{background:#0b0526;border:1px solid var(--line);border-radius:999px;padding:4px 12px;display:flex;gap:6px;align-items:center}
 #status .day{border-color:var(--day)} #status .night{border-color:var(--night)}
-#boardWrap{position:relative;background:#04010f;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+#boardWrap{position:relative;background:#04010f;transition:background 1.2s;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
 #board{width:100%;height:auto;display:block;max-height:calc(100vh - 250px);min-height:300px}
 #bannerSlot{min-height:84px;margin-bottom:8px}
 #banner{width:100%;display:none;background:#0b0526f2;border:2px solid var(--neon);border-radius:14px;padding:14px 16px;box-shadow:0 0 30px #00ffc855;cursor:pointer}
@@ -137,3 +137,6 @@ th{background:#1a0f45}
 .gaincard{height:110px;margin-top:8px;border-radius:6px;animation:cardin .6s ease-out}
 @keyframes cardin{from{transform:rotateY(90deg) scale(.6);opacity:0}to{transform:none;opacity:1}}
 @media(prefers-reduced-motion:reduce){.gaincard{animation:none}}
+
+/* sfondo intorno alla mappa: giorno = azzurro, notte = blu notte */
+#boardWrap.isday{background:#6ec6ff} #boardWrap.isnight{background:#0a1650}
