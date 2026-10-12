@@ -36,8 +36,7 @@
   G.attackCost = function (pid, st) {
     const p = this.pl(pid);
     const n = (p.turn.atk[st.slot] || 0) + 1;
-    let c = AE.attackManaCost(st.slot === 'fist' ? 'base' : st.tier, st.slot === 'fist' ? 1 : n, this.rules);
-    if (st.slot === 'fist') c = 0;
+    let c = AE.attackManaCost(st.slot === 'fist' ? 'base' : st.tier, n, this.rules);   // il pugno segue la scala dei costi base: 0, 1, 2, 3…
     const u = p.temp.ultiTurn;
     if (u && u.mana1 && st.slot !== 'melee' && st.slot !== 'fist') c = Math.max(0, c - 1);
     return c;

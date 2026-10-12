@@ -578,3 +578,14 @@ test('regola dei rifugi (default): il turno dopo essere stato in un rifugio non 
   let ch = null; drive(g.movement(0), (d) => { ch = d.options; return 0; });
   assert.ok(ch.length && ch.every((o) => AE.tile(o.tile).type !== 'rifugio'));
 });
+
+test('pugno: il 1° del turno è gratis, poi 1, 2, 3 mana (come le armi base); si azzera al turno dopo', () => {
+  const g = mk(2, { layout: layout() });
+  place(g, 0, 0, 0); place(g, 1, 0, 0); prep(g, 0);
+  const p = g.pl(0), st = g.weaponStats(0, 'fist');
+  assert.deepStrictEqual([0, 1, 2, 3].map((k) => { p.turn.atk.fist = k; return g.attackCost(0, st); }), [0, 1, 2, 3]);
+  p.turn.atk.fist = 0; p.mana = 4;
+  const n = () => g.attackOptions(0).filter((o) => o.slot === 'fist' && !o.vant).length;
+  let made = 0; while (n() && made < 20) { const o = g.attackOptions(0).find((x) => x.slot === 'fist' && !x.vant); p.mana -= o.cost; p.turn.atk.fist = (p.turn.atk.fist || 0) + 1; made++; }
+  assert.strictEqual(made, 3, 'con 4 mana: 0 + 1 + 2 = 3 pugni');
+});

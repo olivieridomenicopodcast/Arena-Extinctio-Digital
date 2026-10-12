@@ -114,8 +114,8 @@ Il costo dipende dal numero di attacchi **con la stessa arma nel turno corrente*
 Con 4 mana una standard fa al massimo 2 attacchi; una avanzata può fare il 2° attacco solo con il mana extra della **Sfera di Energia** (5 mana). Non esiste un terzo attacco con l'avanzata. [chiarito]
 
 ### 8.4 Pugno
-Gittata 0, danno 1, colpi infiniti, **non costa mana**: se perdi la sfida subisci 1 danno. [chiarito]
-Il pugno resta **illimitato** [chiarito]: se l'attacco fallisce si perdono PV, quindi non conviene rischiare più di tanto. Nel digitale il parametro `punchMax` (0 = illimitati) permette comunque di provare un limite: vedi `docs/DA_RICORDARE.md` per i numeri.
+Gittata 0, danno 1, munizioni infinite. Il costo in mana cresce a ogni pugno **nello stesso turno**: il 1° è **gratis**, il 2° costa **1 mana**, il 3° **2**, il 4° **3** e così via (come le armi base; si azzera al turno dopo). Se perdi la sfida subisci 1 danno. [chiarito]
+Con 4 mana si fanno al massimo 3 pugni a turno (costi 0 + 1 + 2). Prima il pugno era gratuito e illimitato, e un'AI poteva darne decine in un turno: la regola è stata cambiata da Niky. Il parametro `punchMax` (0 = nessun tetto oltre al mana) resta per gli esperimenti.
 
 ### 8.5 Armi
 | Arma | Slot | Tipo | Gittata | Danno | Munizioni | Se perdi | Costo crafting | Copie |
@@ -278,7 +278,7 @@ Giornate prima di togliere i livelli 5, 4, 3: **5, 4, 3** (parametro `levelDays`
 | Rientri | vaghi | tessere Luogo; con 4–5 giocatori li prende chi si ferma sopra [chiarito] |
 | Fastidio | vittima "dado in senso orario" | si rilancia un dado e si conta in senso orario dal primo dopo il Fastidio [chiarito] |
 | Costi attacco | tabella con "+1/+2/+3" | ogni attacco costa **+N rispetto al precedente con la stessa arma** nel turno [chiarito] |
-| Pugno | gratis | gratis, ma se fallisci subisci 1 PV [chiarito] |
+| Pugno | gratis | gratis il primo, poi 1, 2, 3… mana per ogni pugno nello stesso turno; se fallisci subisci 1 PV [chiarito] |
 | Cibo / Medikit | "3 monete = +1 vita" | le carte danno **+1 / +3 PV**; comprare un PV costa 3 monete |
 | Armi Base | "mazzo separato" | **6 carte**: 3 Foolshift (mitra) e 3 Xas (pistola) [chiarito] |
 | Nomi | "Asep", "Ricca Gigaduca" | **Lasep**, **Ricca (Gigaduca)** come sulle carte; armature **Sun Stone** e **The Abyss** |
