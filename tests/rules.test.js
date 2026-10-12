@@ -570,3 +570,11 @@ test('crafting: i cubetti vengono scalati (Sejhnam: sconto di 1 tra Vetro e Uran
   assert.strictEqual(left, 5 - 2, 'U-J Sutom costa 3 cubetti, con lo sconto 2');
   assert.strictEqual(p.weapons.primary.id, 'ujsutom'); assert.strictEqual(p.mana, 3);
 });
+
+test('regola dei rifugi (default): il turno dopo essere stato in un rifugio non ci si può fermare in un rifugio', () => {
+  const g = mk(2, { layout: layout({ [at(0, 0)]: 53, [at(1, 0)]: 54 }) });
+  assert.strictEqual(g.rules.shelterLimit, 1);
+  place(g, 0, 0, 0); prep(g, 0); g.pl(0).shelterRun = 1; dice(g, [1, 0]);
+  let ch = null; drive(g.movement(0), (d) => { ch = d.options; return 0; });
+  assert.ok(ch.length && ch.every((o) => AE.tile(o.tile).type !== 'rifugio'));
+});

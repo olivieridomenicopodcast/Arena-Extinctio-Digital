@@ -200,7 +200,7 @@ Inoltre: **3 monete = +1 PV**, **2 monete = +1 munizione** (1 mana ciascuno). **
 - Chi lo elimina guadagna **+3 monete** e **ruba 1 carta** a scelta dal bottino. L'eliminato riceve monete solo se ne aveva meno di 2 (portato a 2).
 - Chi si **ferma** su una tessera con bottino può prendere fino a **2 oggetti** gratis. Il bottino che si lascia resta lì.
 - **Rivendita** [chiarito]: se il proprietario del bottino è in attesa di rientrare, chi si ferma sulla tessera può **rivendergli tutto il bottino per 5 monete**, oppure prendere 2 oggetti e **rivendergli il resto per 2 monete**. Le monete arrivano dalla banca e il bottino torna al proprietario appena rientra.
-- **Variante** `shelterLimit` (spenta di default, non fa parte delle regole): dopo N turni di fila in un Rifugio, il movimento successivo non può finire in un Rifugio. Serve solo per misurare lo stallo (vedi `DA_RICORDARE.md`).
+- **Rifugi** [chiarito]: se nel turno precedente sei finito in una tessera che ti protegge (Rifugio, tenda…), nel turno dopo non puoi **fermarti** in un Rifugio: ci puoi passare sopra ma non terminarci il movimento. Parametro `shelterLimit` (1 = un turno di fila; 0 = nessun limite, solo per esperimenti). Se non esiste nessuna destinazione fuori dai Rifugi si applica il movimento normale.
 - Se ha un **rientro** lo consuma e rientra all'inizio del suo prossimo turno su una tessera di respawn con **PV e mana pieni**; l'ordine di scelta è: tessere **Luogo**, poi **Rifugio**, poi **Vuote**, poi qualsiasi tessera libera, a caso. Si consuma un rientro **solo se vieni ucciso**. [chiarito]
 - Senza rientri diventi **Giocatore Fastidio**: nel tuo turno tiri **2 dadi**; il primo è il numero di tessere da muovere (obbligatorio, il Fastidio non è bersagliabile e ignora i blocchi). Il secondo è l'azione:
 
@@ -255,7 +255,7 @@ Questi valori stanno in un unico oggetto (`AE.DEFAULT_RULES`); un test controlla
 | punchDamage | 1 |
 | punchFail | 1 |
 | punchMax | 0 |
-| shelterLimit | 0 |
+| shelterLimit | 1 |
 | lootSellAll | 5 |
 | lootSellRest | 2 |
 | periodsPerDay | 2 |
