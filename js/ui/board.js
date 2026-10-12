@@ -62,8 +62,15 @@
       out.push(g2);
     });
     if (opts.path && opts.path.length > 1) {
-      const pts = opts.path.map((ci) => UI.cellXY(ci).map((v) => v.toFixed(1)).join(',')).join(' ');
-      out.push(`<polyline points="${pts}" fill="none" stroke="#00ffc8" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 10" opacity=".95" pointer-events="none"/>`);
+      // il percorso si spezza ai portali: tratto pieno per i passi, tratteggiato rosa per il salto
+      const P = opts.path, xy = (ci) => UI.cellXY(ci).map((v) => v.toFixed(1));
+      let seg = [P[0]];
+      const flush = () => { if (seg.length > 1) out.push(`<polyline points="${seg.map((ci) => xy(ci).join(',')).join(' ')}" fill="none" stroke="#00ffc8" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2 10" opacity=".95" pointer-events="none"/>`); };
+      for (let i = 1; i < P.length; i++) {
+        if (AE.NB[P[i - 1]].includes(P[i])) seg.push(P[i]);
+        else { flush(); const a = xy(P[i - 1]), c = xy(P[i]); out.push(`<line x1="${a[0]}" y1="${a[1]}" x2="${c[0]}" y2="${c[1]}" stroke="#ff5ad7" stroke-width="5" stroke-dasharray="10 8" opacity=".95" pointer-events="none"/>`); seg = [P[i]]; }
+      }
+      flush();
     }
     svg.innerHTML = out.join('');
   };

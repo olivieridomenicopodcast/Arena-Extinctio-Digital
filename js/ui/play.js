@@ -253,14 +253,15 @@
     moveUI(d, done, head, hintBtn) {
       const g = this.game, s = g.s, panel = $('#actionPanel');
       const start = g.cellOfPlayer(d.pid);
-      head(`Il tuo movimento: ${d.roll} ${d.roll === 1 ? 'passo' : 'passi'}${d.steps !== d.roll ? ` (puoi usarne ${d.steps})` : ''} — ${d.options.length} tessere raggiungibili`, d.ghost ? 'Fastidio: scegli dove muoverti.' : 'Devi muoverti <b>esattamente</b> di quel numero di tessere, ma puoi anche <b>girare</b>: l’importante è non ripassare due volte sulla stessa tessera. Contorno pieno = ci arrivi in linea, tratteggiato = ci arrivi girando. Passa sopra una tessera per vedere il percorso.');
-      const sel = {}; d.options.forEach((o) => { sel[o.cell] = AE.cellDist(start, o.cell) === d.steps ? 'sel' : 'selw'; }); this.sel = sel;
+      head(`Il tuo movimento: ${d.roll} ${d.roll === 1 ? 'passo' : 'passi'}${d.steps !== d.roll ? ` (puoi usarne ${d.steps})` : ''} — ${d.options.length} tessere raggiungibili`, d.ghost ? 'Fastidio: scegli dove muoverti.' : 'Devi muoverti <b>esattamente</b> di quel numero di tessere, ma puoi anche <b>girare</b>: l’importante è non ripassare due volte sulla stessa tessera. Contorno pieno = ci arrivi in linea, tratteggiato = ci arrivi girando, <b>rosa</b> = ci arrivi passando da un portale 🌀 (il salto da un portale all’altro conta come lo stesso passo). Passa sopra una tessera per vedere il percorso.');
+      const viaPortal = (o) => { let prev = start; for (const c of o.path) { if (!AE.NB[prev].includes(c)) return true; prev = c; } return false; };
+      const sel = {}; d.options.forEach((o) => { sel[o.cell] = viaPortal(o) ? 'selp' : AE.cellDist(start, o.cell) === d.steps ? 'sel' : 'selw'; }); this.sel = sel;
       const byCell = {}; d.options.forEach((o, i) => { byCell[o.cell] = i; });
       this.onHover = (ci) => { if (byCell[ci] != null) { this.path = [g.cellOfPlayer(d.pid)].concat(d.options[byCell[ci]].path); this.refresh(d); this.sel = sel; UI.renderBoard($('#board'), g, { sel, cur: d.pid, path: this.path, hint: this.hintCell }); } };
       this.onCell = (ci) => { if (byCell[ci] != null) this.confirmThen(null, () => done(byCell[ci])); };
       hintBtn(() => { const i = this.suggest(d); this.hintCell = d.options[i].cell; UI.renderBoard($('#board'), g, { sel, cur: d.pid, hint: this.hintCell }); $('#hintTxt').textContent = `Suggerisco: ${d.options[i].label}`; });
       const list = h('div', { class: 'cardrow' });
-      d.options.forEach((o, i) => { const t = AE.tile(o.tile); const threat = AE.AI.threatAt(g, d.pid, o.cell); list.append(h('button', { class: 'btn small', title: AE.TILE_TYPES[t.type].d, onmouseenter: () => this.onHover(o.cell), onclick: () => done(i) }, `${AE.TILE_TYPES[t.type].i} ${o.label}${threat > 1.5 ? ' ⚠' : ''}${o.stop ? ' 🕸' : ''}`)); });
+      d.options.forEach((o, i) => { const t = AE.tile(o.tile); const threat = AE.AI.threatAt(g, d.pid, o.cell); list.append(h('button', { class: 'btn small', title: AE.TILE_TYPES[t.type].d, onmouseenter: () => this.onHover(o.cell), onclick: () => done(i) }, `${AE.TILE_TYPES[t.type].i} ${o.label}${threat > 1.5 ? ' ⚠' : ''}${o.stop ? ' 🕸' : ''}${viaPortal(o) ? ' 🌀' : ''}`)); });
       panel.append(h('details', {}, h('summary', { class: 'small dim' }, 'Elenco delle destinazioni'), list));
       this.refresh(d); UI.renderBoard($('#board'), g, { sel, cur: d.pid });
     }

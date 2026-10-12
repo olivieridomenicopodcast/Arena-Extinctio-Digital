@@ -87,6 +87,16 @@ test('movimento: portale = obbligatorio, il passo conta una volta (1-2-3(p)→al
   const m3 = g.movementOptions(0, 3);
   assert.ok(m3.ends.some((e) => AE.cellDist(e.cell, at(-3, 2)) === 2 && e.path[0] === at(1, 0)), 'dopo il portale si continua a camminare');
 });
+test('movimento: una tessera a distanza 8 è raggiungibile in 7 passi solo passando dai portali (nessun effetto "pacman")', () => {
+  const portals = { [at(2, -1)]: 33, [at(1, -2)]: 32, [at(-1, 1)]: 35, [at(2, 1)]: 34, [at(-4, 2)]: 36, [at(3, -4)]: 31 };
+  const g = mk(2, { layout: layout(portals) }); place(g, 0, -1, 4);
+  assert.strictEqual(AE.cellDist(at(-1, 4), at(3, -4)), 8);
+  const e = g.movementOptions(0, 7).ends.find((x) => x.cell === at(3, -4));
+  assert.ok(e, 'raggiungibile con i portali');
+  assert.ok(e.path.some((c) => g.typeAt(c) === 'tele'), 'il percorso passa da un portale');
+  const h = mk(2, { layout: layout({ [at(3, -4)]: 31 }) }); place(h, 0, -1, 4);
+  assert.ok(!h.movementOptions(0, 7).ends.some((x) => x.cell === at(3, -4)), 'senza portali non ci si arriva: la mappa non si "avvolge" ai bordi');
+});
 test('movimento: se non si riescono a usare tutti i passi si perde 1 PV e ci si ferma al massimo', () => {
   // giocatore chiuso in una cella con i 6 vicini insormontabili tranne uno senza uscita
   const g = mk(2, { layout: layout() });
