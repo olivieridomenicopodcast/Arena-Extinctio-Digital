@@ -418,6 +418,37 @@ test('Fastidio: una tessera bloccata non si attraversa', () => {
   assert.ok(!g.movementOptions(0, 1).ends.some((e) => e.cell === at(1, 0)));
 });
 
+// ───────── rivendita del bottino, variante rifugio ─────────
+test('bottino: si può rivendere al proprietario in attesa di rientrare (5 monete, o 2 prendendo prima 2 oggetti) e gli torna al rientro', () => {
+  const g = mk(3, { layout: layout(), chars: ['kone', 'ricca', 'lasep'] });
+  place(g, 0, 0, 0); prep(g, 0);
+  const owner = g.pl(1); owner.status = 'pending'; owner.at = null;
+  g.s.loot.push({ tile: g.pl(0).at, owner: 1, items: ['sk:colpo', 'eq:w:tua', 'cube:V'] });
+  drive(g.lootPickup(0), (d) => d.options.findIndex((o) => o.sell === 'all'));
+  assert.strictEqual(g.pl(0).coins, 5); assert.strictEqual(g.s.loot.length, 0); assert.strictEqual(owner.returned.length, 3);
+  drive(g.respawn(1, {}));
+  assert.ok(owner.skills.includes('sk:colpo')); assert.ok(owner.weapons.primary && owner.weapons.primary.id === 'tua'); assert.strictEqual(owner.cubes.V, 1); assert.deepStrictEqual(owner.returned, []);
+  // prendi 2 oggetti e rivendi il resto: +2 monete
+  const h = mk(3, { layout: layout(), chars: ['kone', 'ricca', 'lasep'] }); place(h, 0, 0, 0); prep(h, 0);
+  h.pl(1).status = 'pending'; h.pl(1).at = null; h.s.loot.push({ tile: h.pl(0).at, owner: 1, items: ['sk:colpo', 'sk:scudo', 'sk:mira'] });
+  let n = 0; drive(h.lootPickup(0), (d) => { n++; return n <= 2 ? 0 : d.options.findIndex((o) => o.sell === 'rest'); });
+  assert.strictEqual(h.pl(0).skills.length, 2); assert.strictEqual(h.pl(0).coins, 2); assert.strictEqual(h.pl(1).returned.length, 1);
+  // se il proprietario non è in attesa non si rivende
+  const k = mk(3, { layout: layout() }); place(k, 0, 0, 0); prep(k, 0); k.s.loot.push({ tile: k.pl(0).at, owner: 1, items: ['sk:colpo'] });
+  let seen = null; drive(k.lootPickup(0), (d) => { seen = d.options; return d.options.length - 1; });
+  assert.ok(!seen.some((o) => o.sell));
+});
+test('variante rifugio: dopo N turni di fila in un Rifugio il movimento non può finire in un Rifugio', () => {
+  const g = mk(2, { layout: layout({ [at(0, 0)]: 53, [at(1, 0)]: 54 }), rules: { shelterLimit: 2 } });
+  place(g, 0, 0, 0); prep(g, 0); g.pl(0).shelterRun = 2;
+  dice(g, [1, 0]);
+  let chosen = null; drive(g.movement(0), (d) => { chosen = d.options; return 0; });
+  assert.ok(chosen && chosen.every((o) => AE.tile(o.tile).type !== 'rifugio'), 'nessuna destinazione in un rifugio');
+  g.pl(0).shelterRun = 1; place(g, 0, 0, 0); prep(g, 0); dice(g, [1, 0]);
+  let c2 = null; drive(g.movement(0), (d) => { c2 = d.options; return 0; });
+  assert.ok(c2.some((o) => AE.tile(o.tile).type === 'rifugio'), 'sotto il limite i rifugi sono ammessi');
+});
+
 // ───────── determinismo, replay, fuzz ─────────
 function play(seed, n, replay) {
   const players = [...Array(n)].map((_, i) => ({ name: 'P' + i, kind: 'ai' }));

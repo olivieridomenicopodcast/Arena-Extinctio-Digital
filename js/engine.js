@@ -345,6 +345,7 @@
     }
     endOfTurn(pid) {
       const p = this.pl(pid);
+      p.shelterRun = this.inShelter(pid) ? (p.shelterRun || 0) + 1 : 0;
       delete p.temp.mira; delete p.temp.vantaggio;   // effetti "prossimo attacco" non usati: restano? (vedi regolamento) → Mira resta, Vantaggio no
       p.temp.fabbro = 0;
       if (p.temp.ultiTurn) delete p.temp.ultiTurn;   // Ulti di Karou: fino a fine turno
@@ -476,6 +477,10 @@
         if (s.over || p.status !== 'alive') return;
       }
       if (!mo.ends.length) return;
+      if (this.rules.shelterLimit > 0 && (p.shelterRun || 0) >= this.rules.shelterLimit) {   // variante: dopo N turni di fila in un rifugio devi uscire
+        const out2 = mo.ends.filter((e) => this.typeAt(e.cell) !== 'rifugio');
+        if (out2.length) mo.ends = out2;
+      }
       const options = mo.ends.map((e) => ({ cell: e.cell, tile: s.cells[e.cell].tile, path: e.path, stop: e.stop, label: `${AE.tile(s.cells[e.cell].tile).name} (#${s.cells[e.cell].tile})` }));
       const opt = yield* this.choose(pid, 'move', `Hai ${mo.steps} passi: dove ti fermi?`, options, { roll: n, steps: mo.steps });
       yield* this.walk(pid, opt.path, opt.cell);
@@ -656,8 +661,12 @@
         tile = opt.tile;
       } else tile = cands[this.randInt(cands.length)];
       p.at = tile; p.status = 'alive'; p.hp = this.rules.hp; p.mana = this.maxMana(pid);
-      p.temp = {};
+      p.temp = {}; p.shelterRun = 0;
       const b = this.say('respawn', `↩ ${this.pn(pid)} rientra in gioco su ${AE.tile(tile).name} (#${tile}) con ${p.hp} PV e ${p.mana} mana.`, pid, { tile });
+      if (p.returned && p.returned.length) {     // il bottino che gli hanno rivenduto
+        this.emit('info', `🎒 ${this.pn(pid)} riprende ${p.returned.length} oggetti rivenduti.`, pid);
+        while (p.returned.length) yield* this.gainLoot(pid, p.returned.shift());
+      }
       return b;
     }
   }

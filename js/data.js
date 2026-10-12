@@ -185,6 +185,8 @@
     inv: { skill: 2, special: 2, heal: 2, project: 1 },
     skillStealOnKill: 1,
     punchDamage: 1, punchFail: 1, punchMax: 0,   // punchMax: pugni massimi per turno (0 = illimitati, come da regolamento)
+    lootSellAll: 5, lootSellRest: 2,   // rivendita del bottino al giocatore che rientra
+    shelterLimit: 0,                    // variante (0 = spenta): dopo N turni di fila in un Rifugio il movimento successivo non può finire in un Rifugio
     maxRounds: 400,
     // interpretazioni (vedi docs/REGOLAMENTO.md)
     godNocyTemp: true, godNocyRange: 2,

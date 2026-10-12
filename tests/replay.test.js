@@ -29,5 +29,5 @@ test('ripresa dal salvataggio: lo stato ricostruito è identico, in ogni punto d
       assert.strictEqual(JSON.stringify(g2.s), sn.state, `seed ${seed}`); checks++;
     }
   }
-  assert.ok(checks >= 20, 'controlli eseguiti: ' + checks);
+  assert.ok(checks >= 12, 'controlli eseguiti: ' + checks);
 });

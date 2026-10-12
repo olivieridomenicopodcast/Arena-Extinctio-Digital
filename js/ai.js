@@ -380,7 +380,9 @@
       switch (dec.what) {
         case 'steal': {
           if (dec.victim != null && opts.some((o) => o.res)) return argmax((o) => (o.res ? (o.res === 'M' ? 1.2 : 1) + (needScore(g, pid) > 0 ? 0.5 : 0) : 0));
-          return argmax((o) => (o.item == null ? 0 : o.item.startsWith('cube:') ? 0.5 : o.item.startsWith('eq:') ? lootEq(g, pid, o.item) : cardValue(o.item)));
+          const lt = g.s.loot.find((l) => l.tile === g.pl(pid).at && l.owner === dec.victim);
+          const rest = lt ? lt.items.reduce((a, it) => a + (it.startsWith('cube:') ? 0.4 : it.startsWith('eq:') ? lootEq(g, pid, it) : cardValue(it)), 0) : 0;
+          return argmax((o) => (o.sell ? o.coins * 0.32 - rest * 0.25 : o.item == null ? 0 : o.item.startsWith('cube:') ? 0.5 : o.item.startsWith('eq:') ? lootEq(g, pid, o.item) : cardValue(o.item)));
         }
         case 'overflow': return argmax((o) => { if (o.drop === dec.card) return -cardValue(dec.card); return -cardValue(o.drop) * 1.0 - 0.01; });
         case 'cards': {

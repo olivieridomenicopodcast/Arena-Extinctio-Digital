@@ -174,18 +174,39 @@
       if (s.over || this.pl(pid).status !== 'alive') return;
     }
   };
-  // bottino sulla tessera: fino a 2 oggetti gratis a chi si ferma lì
+  // bottino sulla tessera: fino a 2 oggetti gratis a chi si ferma lì; se il proprietario è in attesa di rientrare si può anche
+  // RIVENDERGLIELO: tutto il bottino per 5 monete, oppure presi i 2 oggetti il resto per 2 monete [interpretazione]
   G.lootPickup = function* (pid) {
-    const s = this.s, p = this.pl(pid);
+    const s = this.s, p = this.pl(pid), R = this.rules;
     for (const lt of s.loot.filter((l) => l.tile === p.at)) {
-      for (let n = 0; n < 2 && lt.items.length; n++) {
-        const o = yield* this.choose(pid, 'steal', `Bottino di ${this.pl(lt.owner).name}: prendi un oggetto (${n + 1}/2)`, lt.items.map((it) => ({ item: it, label: this.lootName(it) })).concat([{ item: null, label: 'Basta così' }]), { force: true, victim: lt.owner });
+      const owner = this.pl(lt.owner);
+      const canSell = () => owner.status === 'pending' && lt.items.length > 0;
+      let taken = 0;
+      while (taken < 2 && lt.items.length) {
+        const opts = lt.items.map((it) => ({ item: it, label: this.lootName(it) }));
+        if (taken === 0 && canSell()) opts.push({ sell: 'all', coins: R.lootSellAll, label: `Rivendi tutto il bottino a ${owner.name} (+${R.lootSellAll} monete)` });
+        if (taken > 0 && canSell()) opts.push({ sell: 'rest', coins: R.lootSellRest, label: `Rivendi il resto a ${owner.name} (+${R.lootSellRest} monete)` });
+        opts.push({ item: null, label: 'Basta così' });
+        const o = yield* this.choose(pid, 'steal', `Bottino di ${owner.name}: prendi un oggetto (${taken + 1}/2) o rivendilo`, opts, { force: true, victim: lt.owner });
+        if (o.sell) { yield* this.sellLoot(pid, lt, o); break; }
         if (!o.item) break;
-        lt.items.splice(lt.items.indexOf(o.item), 1);
+        lt.items.splice(lt.items.indexOf(o.item), 1); taken++;
         yield* this.gainLoot(pid, o.item);
+      }
+      if (taken === 2 && canSell()) {
+        const o = yield* this.choose(pid, 'steal', `Rivendere il resto del bottino di ${owner.name}?`, [{ sell: 'rest', coins: R.lootSellRest, label: `Sì, +${R.lootSellRest} monete` }, { item: null, label: 'No, lascia lì' }], { force: true, victim: lt.owner });
+        if (o.sell) yield* this.sellLoot(pid, lt, o);
       }
       if (!lt.items.length) s.loot = s.loot.filter((l) => l !== lt);
     }
+  };
+  G.sellLoot = function* (pid, lt, o) {
+    const owner = this.pl(lt.owner);
+    this._addCoins(pid, o.coins);
+    owner.returned = (owner.returned || []).concat(lt.items); lt.items = [];
+    this.stat('lootSold', pid);
+    const b = this.say('coins', `💰 ${this.pn(pid)} rivende il bottino a ${this.pn(lt.owner)} per ${o.coins} monete: gli tornerà quando rientra.`, pid);
+    if (b) yield b;
   };
 
   // ───────────── crafting ─────────────

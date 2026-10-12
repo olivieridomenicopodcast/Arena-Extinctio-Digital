@@ -30,10 +30,10 @@ if (eff) {
 } else
 if (exp) {
   const [key, vals] = exp.split('='); const list = vals.split(',').map((v) => (isNaN(Number(v)) ? v : Number(v)));
-  out.push(`# Esperimento: ${key} = ${list.join(' / ')}`, '', `${games} partite per valore, ${n} giocatori, profili: ${profiles.map((p) => p.label).join(' vs ')}`, '', '| valore | round medi (mediana) | primo posto % | ' + profiles.map((p) => p.label + ' %').join(' | ') + ' |', '|---|---|---|' + profiles.map(() => '---|').join(''));
+  out.push(`# Esperimento: ${key} = ${list.join(' / ')}`, '', `${games} partite per valore, ${n} giocatori, profili: ${profiles.map((p) => p.label).join(' vs ')}`, '', '| valore | round medi (mediana) | oltre 100 round | interrotte al limite | primo posto % | ' + profiles.map((p) => p.label + ' %').join(' | ') + ' |', '|---|---|---|---|---|' + profiles.map(() => '---|').join(''));
   for (const v of list) {
     const t = run({ [key]: v }); const f = (x) => (100 * x).toFixed(1);
-    out.push(`| ${v} | ${AE.Sim.mean(t.rounds).toFixed(1)} (${AE.Sim.quantile(t.rounds, 0.5)}) | ${f(t.seatWins[0] / t.games)} | ` + t.profiles.map((p) => f(p.wins / Math.max(1, p.games)) + ' [' + AE.Sim.wilson(p.wins, p.games).slice(1).map((x) => f(x)).join('–') + ']').join(' | ') + ' |');
+    out.push(`| ${v} | ${AE.Sim.mean(t.rounds).toFixed(1)} (${AE.Sim.quantile(t.rounds, 0.5)}) | ${f(t.rounds.filter((x) => x > 100).length / t.games)}% | ${t.why['tempo massimo'] || 0} | ${f(t.seatWins[0] / t.games)} | ` + t.profiles.map((p) => f(p.wins / Math.max(1, p.games)) + ' [' + AE.Sim.wilson(p.wins, p.games).slice(1).map((x) => f(x)).join('–') + ']').join(' | ') + ' |');
   }
 } else {
   const t = run(undefined); out.push(AE.Sim.report(t, `Simulazione ${profiles.map((p) => p.label).join(' vs ')}`), '', `_Tempo: ${t.secs.toFixed(1)} s_`);

@@ -10,6 +10,7 @@ function census(g) {
     [p.heal, p.skills, p.specials, p.projects].forEach((l) => l.forEach(add));
     for (const k of ['primary', 'secondary', 'melee']) { const w = p.weapons[k]; if (w) { add('w:' + w.id); if (w.mod) add('mod:' + w.mod); } }
     if (p.armor) add('ar:' + p.armor.id);
+    for (const it of p.returned || []) { if (!it.startsWith('cube:')) add(it.startsWith('eq:') ? it.slice(3) : it); }
   }
   (s.limbo || []).forEach(add);
   for (const l of s.loot) for (const it of l.items) { if (it.startsWith('cube:')) continue; add(it.startsWith('eq:') ? it.slice(3) : it); }

@@ -25,7 +25,7 @@
   const LEVELS = [['easy', 'Facile'], ['medium', 'Media'], ['hard', 'Difficile']];
   const RULE_FIELDS = [
     ['hp', 'Punti vita iniziali'], ['mana', 'Slot mana'], ['coinsMax', 'Monete massime'], ['cubeMax', 'Cubetti max per tipo'], ['ultiMana', 'Costo Ulti (mana)'],
-    ['killCoins', 'Monete per eliminazione'], ['luogoCoins', 'Monete su Luogo'], ['rifugioCoins', 'Monete su Rifugio'], ['trapHp', 'PV della trappola/torretta'], ['turretDmg', 'Danni della torretta'], ['punchDamage', 'Danno del pugno'], ['punchMax', 'Pugni max per turno (0 = illimitati)'],
+    ['killCoins', 'Monete per eliminazione'], ['luogoCoins', 'Monete su Luogo'], ['rifugioCoins', 'Monete su Rifugio'], ['trapHp', 'PV della trappola/torretta'], ['turretDmg', 'Danni della torretta'], ['punchDamage', 'Danno del pugno'], ['punchMax', 'Pugni max per turno (0 = illimitati)'], ['shelterLimit', 'Variante: turni di fila max in un Rifugio (0 = spenta)'],
   ];
   UI.RULE_FIELDS = RULE_FIELDS;
 
