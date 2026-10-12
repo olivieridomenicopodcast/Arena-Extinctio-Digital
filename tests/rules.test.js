@@ -65,9 +65,9 @@ test('movimento: un muro sul lato blocca il passaggio', () => {
 });
 test('movimento: i muri ruotano con la tessera', () => {
   const north = at(0, -1);
-  const rot = []; rot[north] = 3;           // ruotato di 3 lati: il muro S diventa N
-  const g = mk(2, { layout: layout({ [north]: 52 }), rot });
-  assert.ok(!g.wallBetween(north, 3)); assert.ok(g.wallBetween(north, 0));
+  const rot = []; rot[north] = 3;           // tessera 51 (muri S e NW) ruotata di 3 lati: i muri diventano N e SE
+  const g = mk(2, { layout: layout({ [north]: 51 }), rot });
+  assert.ok(g.wallBetween(north, 0)); assert.ok(g.wallBetween(north, 2)); assert.ok(!g.wallBetween(north, 3)); assert.ok(!g.wallBetween(north, 5));
 });
 test('movimento: le tessere insormontabili non si attraversano', () => {
   const g = mk(2, { layout: layout({ [at(1, -1)]: 58, [at(1, 0)]: 59 }) });
@@ -604,4 +604,14 @@ test('pugno: disponibile solo quando restano i livelli 1 e 2 (punchLevels = 2); 
   g.s.removedLevels = 0; assert.ok(g.actionCatalog(0).disabled.some((o) => o.kind === 'attack' && o.slot === 'fist' && /livelli 1–2/.test(o.reason)), 'spiega perché non c’è');
   const h = mk(2, { layout: layout(), rules: { punchLevels: 5 } }); place(h, 0, 0, 0); place(h, 1, 0, 0); prep(h, 0);
   assert.ok(h.attackOptions(0).some((o) => o.slot === 'fist'), 'con punchLevels = 5 il pugno è sempre disponibile (esperimenti)');
+});
+
+test('muri: i lati bloccati di ogni tessera Muro coincidono con i mattoni disegnati nelle immagini (analisi dei pixel a rotazione 0)', () => {
+  // rilevato dalle immagini assets/tiles/t46..t52 (lati: 0=N, 1=NE, 2=SE, 3=S, 4=SW, 5=NW); la 52 ha mattoni sia sopra sia sotto
+  const drawn = { 46: [1, 2, 3], 47: [1, 2, 3], 48: [1, 2, 3], 49: [1, 2], 50: [1, 5], 51: [3, 5], 52: [0, 3] };
+  for (const id in drawn) assert.deepStrictEqual(AE.tile(+id).walls.slice().sort(), drawn[id], 'tessera ' + id);
+  // e il motore blocca davvero entrambi i lati della 52 (con rotazione 0: N e S)
+  const g = mk(2, { layout: layout({ [at(0, 0)]: 52 }) }); g.s.cells[at(0, 0)].rot = 0;
+  assert.ok(g.wallBetween(at(0, 0), 0) && g.wallBetween(at(0, 0), 3), 'muro sopra e sotto');
+  assert.ok(!g.wallBetween(at(0, 0), 1) && !g.wallBetween(at(0, 0), 2) && !g.wallBetween(at(0, 0), 4) && !g.wallBetween(at(0, 0), 5));
 });

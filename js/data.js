@@ -30,7 +30,7 @@
     insorm: { n: 'Insormontabile', i: '🏔️', d: 'Non si può attraversare né da personaggi né da proiettili.' },
   };
   // muri: lati (0=N 1=NE 2=SE 3=S 4=SO 5=NO) nella posizione stampata
-  const WALLS = { 46: [1, 2, 3], 47: [1, 2, 3], 48: [1, 2, 3], 49: [1, 2], 50: [5, 1], 51: [5, 3], 52: [3] };
+  const WALLS = { 46: [1, 2, 3], 47: [1, 2, 3], 48: [1, 2, 3], 49: [1, 2], 50: [5, 1], 51: [5, 3], 52: [0, 3] };
   // tessere Equipaggiamento: arma base raffigurata, munizioni, medikit
   const EQUIP = { 37: ['mitra', 1, 0], 38: ['mitra', 1, 0], 39: ['mitra', 1, 0], 40: ['pistola', 1, 0], 41: ['pistola', 1, 0], 42: [null, 1, 1], 43: [null, 1, 1], 44: [null, 1, 1], 45: ['both', 1, 1] };
   const PLACES = { 1: 'Parco Miralfiore, Pesaro', 2: 'Collina Mishennaya, Petropavlovsk', 3: 'Karijini Park, Australia', 4: 'Orono Bog, Maine', 5: 'Jang Bogo, Antartide', 6: 'Monte Luvili, Angola' };
