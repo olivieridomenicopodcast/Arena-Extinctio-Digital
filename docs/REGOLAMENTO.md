@@ -145,7 +145,7 @@ Ogni arma può avere **1 Mod**: +1 danno, +1 gittata o +1 munizione di capienza.
 Ogni attacco subito (anche con 0 danni passanti) consuma **1 punto di durata**. A durata 0 l'armatura è esaurita. Esempio: The Abyss, subisci 4 danni → assorbe 2 → ne subisci 2, durata 1. L'armatura non conta contro i danni che **bypassano le difese**. [interpretazione: l'armatura si consuma solo se il colpo va a segno o è un danno ad area]
 
 ### 8.7 Attacchi alle trappole
-Si può attaccare una trappola o una torretta nella tua tessera o in linea di tiro: il colpo va a segno senza dadi e toglie PV pari al danno. [interpretazione]
+Si può attaccare una trappola o una torretta **di un altro giocatore** (non le proprie [chiarito]) nella tua tessera o in linea di tiro: il colpo va a segno senza dadi e toglie PV pari al danno. [interpretazione]
 
 ## 9. Carte, crafting e mercato
 

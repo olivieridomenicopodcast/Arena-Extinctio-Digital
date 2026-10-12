@@ -524,3 +524,12 @@ test('Ulti di Hatci: solo in linea retta, i muri non fermano, l’insormontabile
   place(g, 2, 0, 3); place(g, 1, 0, 2);
   assert.deepStrictEqual(ids(), [1], 'il primo corpo copre quello dietro');
 });
+
+test('non si possono attaccare le proprie trappole e torrette, ma quelle degli altri sì', () => {
+  const g = mk(2, { layout: layout() });
+  place(g, 0, 0, 0); prep(g, 0);
+  g.s.traps.push({ id: 1, kind: 'turret', tile: g.pl(0).at, owner: 0, hp: 4, marks: [] });
+  assert.strictEqual(g.targetsFrom(0, 0).filter((t) => t.kind === 'trap').length, 0);
+  g.s.traps[0].owner = 1;
+  assert.strictEqual(g.targetsFrom(0, 0).filter((t) => t.kind === 'trap').length, 1);
+});

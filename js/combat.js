@@ -54,7 +54,7 @@
       if (q.id === pid || q.status !== 'alive') continue;
       if (q.at === here.at) out.push({ kind: 'player', pid: q.id, dist: 0, dir: -1, cell: ci });
     }
-    for (const t of s.traps) if (t.tile === here.at) out.push({ kind: 'trap', id: t.id, dist: 0, dir: -1, cell: ci });
+    for (const t of s.traps) if (t.tile === here.at && t.owner !== pid) out.push({ kind: 'trap', id: t.id, dist: 0, dir: -1, cell: ci });
     if (git < 1) return out;
     for (let d = 0; d < 6; d++) {
       let cur = ci;
@@ -69,7 +69,7 @@
           if (q.id === pid || q.status !== 'alive' || q.at !== tid) continue;
           out.push({ kind: 'player', pid: q.id, dist: k, dir: d, cell: cur }); blocked = true;
         }
-        for (const t of s.traps) if (t.tile === tid) { out.push({ kind: 'trap', id: t.id, dist: k, dir: d, cell: cur }); }
+        for (const t of s.traps) if (t.tile === tid && t.owner !== pid) { out.push({ kind: 'trap', id: t.id, dist: k, dir: d, cell: cur }); }
         if (blocked) break;     // un corpo ferma il colpo
       }
     }
