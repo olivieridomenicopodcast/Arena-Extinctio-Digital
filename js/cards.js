@@ -39,13 +39,13 @@
       const n = Math.min(room, this.rules.cubesPerCard);
       p.cubes[x] += n;
       this.discardCard('mat', id);
-      b = this.say('gain', `🧊 ${this.pn(pid)} prende ${n} cubetti di ${AE.RES[x].s}${n < this.rules.cubesPerCard ? ' (riserva piena: il resto va perso)' : ''}.`, pid);
+      b = this.say('gain', `🧊 ${this.pn(pid)} pesca ${AE.cardName(id)}: prende ${n} cubetti di ${AE.RES[x].s} ${AE.RES[x].i}${n < this.rules.cubesPerCard ? ' (riserva piena: il resto va perso)' : ''}.`, pid, { card: id, n });
       if (b) yield b;
       return;
     }
     if (id === 'sp:mina') {
       this.discardCard('skill', id);
-      b = this.say('mina', `💣 ${this.pn(pid)} calpesta una Mina Esplosiva: 2 danni!`, pid); if (b) yield b;
+      b = this.say('mina', `💣 ${this.pn(pid)} pesca una Mina Esplosiva: 2 danni!`, pid, { card: id }); if (b) yield b;
       this.stat('mine', pid);
       yield* this.damage(pid, 2, { src: null, bypass: true, reason: 'mina' });
       return;
@@ -53,7 +53,7 @@
     if (id === 'sp:svantaggio') {
       this.discardCard('skill', id);
       p.temp.svantaggio = true;
-      b = this.say('malus', `🎲 ${this.pn(pid)} pesca Svantaggio: nel prossimo combattimento tirerà con svantaggio.`, pid); if (b) yield b;
+      b = this.say('malus', `🎲 ${this.pn(pid)} pesca Svantaggio: nel prossimo combattimento tirerà con svantaggio.`, pid, { card: id }); if (b) yield b;
       this.stat('svantaggio', pid);
       return;
     }

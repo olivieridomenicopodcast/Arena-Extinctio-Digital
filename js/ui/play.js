@@ -121,7 +121,7 @@
         if (ev.k === 'attack' && d.ra) box.append(h('div', { class: 'verdict ' + (d.win ? 'hit' : 'miss') }, d.win ? '💥 COLPITO!' : '🛡 MANCATO'));
         b.querySelector('.msg').after(box);
       }
-      if (ev.k === 'gain' && d.card && !String(d.card).startsWith('cube:')) { const im = UI.cardImg(String(d.card)); if (im) { im.classList.add('gaincard'); b.querySelector('.msg').after(im); } }
+      if (['gain', 'mina', 'malus'].includes(ev.k) && d.card && !String(d.card).startsWith('cube:')) { const im = UI.cardImg(String(d.card)); if (im && im.tagName === 'IMG') { im.classList.add('gaincard'); im.dataset.back = AE.CARD_BACK[g.deckOfCard(d.card)] || ''; b.querySelector('.msg').after(im); } }
       b.style.display = 'block';
       const ap = A.playBeat($('#board'), ev, st, b);
       const auto = SPEEDS[this.speed];

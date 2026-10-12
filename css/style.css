@@ -134,7 +134,7 @@ th{background:#1a0f45}
 .dsum{font-size:1.15em;font-weight:800;min-height:1.4em;opacity:0}.dsum.on{opacity:1;transition:opacity .2s}
 .verdict{font-size:1.5em;font-weight:900;opacity:0;align-self:center;transform:scale(.6);transition:all .25s}
 .verdict.on{opacity:1;transform:scale(1)} .verdict.hit{color:#ff5c7a} .verdict.miss{color:#9fb2ff}
-.gaincard{height:110px;margin-top:8px;border-radius:6px;animation:cardin .6s ease-out}
+.gaincard{height:210px;margin-top:8px;border-radius:6px;animation:cardin .6s ease-out}
 @keyframes cardin{from{transform:rotateY(90deg) scale(.6);opacity:0}to{transform:none;opacity:1}}
 @media(prefers-reduced-motion:reduce){.gaincard{animation:none}}
 

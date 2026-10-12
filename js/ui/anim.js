@@ -67,6 +67,15 @@
     });
   };
 
+  // la carta pescata arriva dal retro del suo mazzo, si gira e mostra il fronte
+  A.flip = (img, k) => {
+    const back = img.dataset.back, front = img.getAttribute('src');
+    if (!k || !back) return Promise.resolve();
+    img.src = back; img.style.animation = 'none';
+    return run(img, [{ transform: 'translateY(-60px) rotateY(0deg) scale(.7)', opacity: 0 }, { transform: 'translateY(0) rotateY(0deg) scale(1)', opacity: 1, offset: 0.35 }, { transform: 'rotateY(90deg)', offset: 0.6 }], { duration: 650 * k })
+      .then(() => { img.src = front; return run(img, [{ transform: 'rotateY(-90deg)' }, { transform: 'rotateY(0deg) scale(1.08)', offset: 0.7 }, { transform: 'rotateY(0deg) scale(1)' }], { duration: 350 * k }); });
+  };
+
   // ───────────── SVG: livello effetti ─────────────
   function fxLayer(svg) { let g = svg.querySelector('#fx'); if (!g) { g = document.createElementNS(NS, 'g'); g.id = 'fx'; g.setAttribute('pointer-events', 'none'); svg.append(g); } return g; }
   function mk(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.append(e); return e; }
@@ -181,6 +190,7 @@
       let del = 0; dicePanel._groups.forEach((g) => { jobs.push(A.tumble(g, del)); del += 250; });
       if (ev.k === 'attack') jobs.push(Promise.all(jobs.slice()).then(() => { const v = dicePanel.querySelector('.verdict'); if (v) v.classList.add('on'); }));
     }
+    const gc = banner && banner.querySelector('.gaincard'); if (gc) jobs.push(A.flip(gc, k));
     if (!svg || !k) return Promise.all(jobs);
     const fx = fxLayer(svg);
     const moved = Object.assign({}, st.moves);
