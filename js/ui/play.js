@@ -123,6 +123,8 @@
       }
       if (['gain', 'mina', 'malus'].includes(ev.k) && d.card && !String(d.card).startsWith('cube:')) { const im = UI.cardImg(String(d.card)); if (im && im.tagName === 'IMG') { im.classList.add('gaincard'); im.dataset.back = AE.CARD_BACK[g.deckOfCard(d.card)] || ''; b.querySelector('.msg').after(im); } }
       b.style.display = 'block';
+      // sul telefono la pagina può essere scrollata sul pannello azioni: riporta in vista il messaggio di quello che è appena successo
+      try { const r = b.getBoundingClientRect(); if (r.top < 0 || r.bottom > (window.innerHeight || 0)) b.scrollIntoView({ block: 'center', behavior: this.speed === 'instant' ? 'auto' : 'smooth' }); } catch (e) { /* ok */ }
       const ap = A.playBeat($('#board'), ev, st, b);
       const auto = SPEEDS[this.speed];
       await new Promise((res) => {
