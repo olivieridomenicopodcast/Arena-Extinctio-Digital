@@ -152,7 +152,7 @@ Si può attaccare una trappola o una torretta **di un altro giocatore** (non le 
 
 ### 9.1 Materiali
 - **Vetro Cristallizzato, Uranio Impoverito, Minerale Nucleare:** pescare la carta ti dà **2 cubetti** di quel minerale; la carta non si tiene, serve solo a dirti quanti cubetti prendere. La riserva arriva a **6 cubetti per tipo**. [chiarito] Nel digitale i cubetti sono un contatore; al tavolo sono veri cubetti.
-- **Cibo:** +1 PV. **Medikit:** +3 PV. Si tengono in mano (massimo 2 carte di cura in tutto) e si usano pagando **1 mana**. [interpretazione per il costo]
+- **Cibo:** +1 PV. **Medikit:** +3 PV. Si tengono in mano (massimo 2 carte di cura in tutto) e si usano pagando **1 mana**. [chiarito]
 
 ### 9.2 Skill (usa e getta, 1 mana)
 - **Teletrasporto Corto:** vai su una tessera a tua scelta entro 2 tessere (di notte 3); è come fermarti lì, quindi la attivi.
@@ -286,4 +286,4 @@ Giornate prima di togliere i livelli 5, 4, 3: **5, 4, 3** (parametro `levelDays`
 
 ## 14. Punti ancora da chiarire / confermare al playtest
 
-Le regole segnate [interpretazione] qui sopra. Quelle più importanti da guardare nei log: raggio e spinta dell'Onda di God_Nocy, difesa reattiva di 'Nganga, nuvola di Sejhnam, seguaci di Kone, il costo in mana di Cibo/Medikit, la durata della partita e il rischio di stallo con due giocatori che restano nei rifugi. Vedi `docs/DA_RICORDARE.md`.
+Le regole segnate [interpretazione] qui sopra. Quelle più importanti da guardare nei log: raggio e spinta dell'Onda di God_Nocy, difesa reattiva di 'Nganga, nuvola di Sejhnam, seguaci di Kone, la durata della partita e il rischio di stallo con due giocatori che restano nei rifugi. Vedi `docs/DA_RICORDARE.md`.
