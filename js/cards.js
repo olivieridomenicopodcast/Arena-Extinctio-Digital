@@ -260,15 +260,17 @@
     p.projects.splice(p.projects.indexOf(o.proj), 1);   // la carta resta in gioco come equipaggiamento
     const [k, x] = o.proj.split(':');
     let b;
+    const paid = AE.RES_KEYS.filter((r) => o.cost[r] > 0).map((r) => `${o.cost[r]} ${AE.RES[r].s}`).join(' + ');
+    const pay = ` (spende ${paid || 'nessun cubetto'}${p.char === 'sejhnam' || p.temp.fabbro ? ', sconto incluso' : ''})`;
     if (k === 'w') {
       const old = p.weapons[o.slot];
       if (old) this.discardWeapon(old);
       p.weapons[o.slot] = { id: x, ammo: 0, mod: null }; p.weapons[o.slot].ammo = this.weaponStats(pid, o.slot).cap;
-      b = this.say('craft', `⚒ ${this.pn(pid)} crafta ${AE.WEAPONS[x].n} (${AE.TIER_NAMES[AE.WEAPONS[x].tier]})${old ? ` e scarta ${AE.WEAPONS[old.id].n}` : ''}.`, pid);
+      b = this.say('craft', `⚒ ${this.pn(pid)} crafta ${AE.WEAPONS[x].n} (${AE.TIER_NAMES[AE.WEAPONS[x].tier]})${pay}${old ? ` e scarta ${AE.WEAPONS[old.id].n}` : ''}.`, pid);
     } else if (k === 'ar') {
       if (p.armor) this.discardCard('proj', 'ar:' + p.armor.id);
       p.armor = { id: x, dur: AE.ARMORS[x].dur };
-      b = this.say('craft', `⚒ ${this.pn(pid)} crafta l’armatura ${AE.ARMORS[x].n}.`, pid);
+      b = this.say('craft', `⚒ ${this.pn(pid)} crafta l’armatura ${AE.ARMORS[x].n}${pay}.`, pid);
     } else {
       p.weapons[o.slot].mod = x;
       p.weapons[o.slot].ammo += x === 'mun' ? 1 : 0;

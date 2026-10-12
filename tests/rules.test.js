@@ -560,3 +560,13 @@ test('segnalini: \'Nganga che ci passa sopra non li consuma; due torrette di fil
   drive(b.walk(0, [at(1, 0), at(2, 0)], at(2, 0)));
   assert.strictEqual(b.pl(0).hp, 6); assert.ok(b.s.traps.every((t) => t.marks.length === 0));
 });
+
+test('crafting: i cubetti vengono scalati (Sejhnam: sconto di 1 tra Vetro e Uranio)', () => {
+  const g = mk(2, { chars: ['sejhnam', 'kone'] }); const p = g.pl(0); prep(g, 0);
+  p.cubes = { V: 1, U: 2, M: 2 }; p.projects = ['w:ujsutom']; p.mana = 4;
+  const o = g.craftOptions(0).find((x) => x.proj === 'w:ujsutom');
+  assert.ok(o); drive(g.doCraft(0, o));
+  const left = p.cubes.V + p.cubes.U + p.cubes.M;
+  assert.strictEqual(left, 5 - 2, 'U-J Sutom costa 3 cubetti, con lo sconto 2');
+  assert.strictEqual(p.weapons.primary.id, 'ujsutom'); assert.strictEqual(p.mana, 3);
+});
