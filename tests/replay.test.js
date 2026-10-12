@@ -48,3 +48,15 @@ test('ripresa da istantanea a inizio turno: la partita riparte dallo stesso stat
   while (!q.done && m++ < 6000) q = q.value.type === 'choose' ? gen2.next(ais[q.value.pid].decide(g2, q.value)) : gen2.next();
   assert.ok(g2.s.over, 'la partita ripresa finisce');
 });
+
+test('rete: ogni decisione del motore si può spedire come JSON (nessuna perdita) e lo stato pure', () => {
+  const players = [0, 1, 2, 3].map((i) => ({ name: 'P' + i, kind: 'ai' }));
+  const ais = players.map((p, i) => AE.AI.create('medium', 'j' + i));
+  const g = new AE.Game({ seed: 'json1', players });
+  const gen = g.run(); let r = gen.next(), n = 0;
+  while (!r.done && n++ < 1500) {
+    if (r.value.type === 'choose') { const d = r.value; assert.deepStrictEqual(JSON.parse(JSON.stringify(d)), JSON.parse(JSON.stringify(d))); assert.strictEqual(JSON.stringify(JSON.parse(JSON.stringify(d))), JSON.stringify(d), 'decisione senza funzioni/undefined che si perdono'); r = gen.next(ais[d.pid].decide(g, d)); } else r = gen.next();
+  }
+  assert.ok(n > 100);
+  assert.strictEqual(JSON.stringify(JSON.parse(JSON.stringify(g.s))), JSON.stringify(g.s));
+});

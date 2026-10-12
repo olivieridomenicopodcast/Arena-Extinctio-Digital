@@ -23,9 +23,14 @@
       this.skipping = false; this.tab = 'players'; this.view = Math.max(0, cfg.players.findIndex((p) => p.kind === 'human'));
       this.aborted = false; this.tick = 0; this.hintOn = false; this.sel = null; this.path = null; this.hintCell = null;
       const replay = cfg.history ? cfg.history.slice() : [];
-      this.game = new AE.Game({ seed: cfg.seed, players: cfg.players, rules: cfg.rules, beats: true, replay, resume: cfg.resume, keepSnaps: !cfg.review });
+      this.net = cfg.net || null;                         // partita in rete: { role: 'host'|'guest', ... } (vedi js/ui/net.js)
+      this.isGuest = !!(this.net && this.net.role === 'guest');
+      this.game = new AE.Game({ seed: cfg.seed, players: cfg.players, rules: cfg.rules, beats: true, replay, resume: cfg.resume, keepSnaps: !cfg.review && !this.net });
+      if (this.isGuest) { this.mode = 'play'; this.view = cfg.mySeat; this.speed = cfg.speed || 'normal'; this.evSeen = 0; }
+      else if (this.net) { this.view = cfg.mySeat; this.aiTakeover = {}; }
       this.game.onEvent = (ev) => this.onEvent(ev);
       this.ais = cfg.players.map((p, i) => (p.kind === 'human' ? null : AE.AI.create(p.level || 'medium', `${cfg.seed}:${i}`)));
+      if (this.net && !this.isGuest) this.setupHostNet();
       this.hintAI = AE.AI.create('hard', 'hint:' + cfg.seed);
       this.keyHandler = (e) => { if ((e.key === ' ' || e.key === 'Enter') && this.beatResolve && !UI.$('#modalBg').style.display.includes('flex')) { e.preventDefault(); this.advance(); } };
     }
@@ -47,7 +52,7 @@
       this.renderNav();
       this.refresh();
     }
-    destroy() { this.aborted = true; document.removeEventListener('keydown', this.keyHandler); if (this.beatResolve) this.advance(); if (this.choiceResolve) this.choiceResolve(0); }
+    destroy() { this.aborted = true; if (this.net) { UI.net.releaseAwake(); this.net.close(); } document.removeEventListener('keydown', this.keyHandler); if (this.beatResolve) this.advance(); if (this.choiceResolve) this.choiceResolve(0); }
 
     renderNav() {
       const nav = $('#nav'); nav.innerHTML = '';
@@ -57,6 +62,7 @@
       const sel = h('select', { title: 'Velocità dei messaggi', onchange: (e) => { this.speed = e.target.value; if (this.beatResolve && this.speed === 'instant') this.advance(); } });
       for (const k in SPEED_NAMES) sel.append(h('option', { value: k, selected: k === this.speed }, '⏱ ' + SPEED_NAMES[k]));
       nav.append(sel);
+      if (this.net) { const on = this.isGuest ? '' : ' · ' + (Object.keys(this.net.pidGuest).filter((k) => this.net.isOnline(+k)).length) + '/' + Object.keys(this.net.pidGuest).length + ' amici online'; nav.append(h('span', { class: 'pill', title: 'Codice della stanza' }, '🌐 ' + this.net.code + on)); }
       add('📖 Regole', () => UI.rulesModal());
       add('💾 Esporta cronaca', () => this.exportLog());
     }
@@ -74,12 +80,13 @@
 
     // ───────────── salvataggio ─────────────
     save(finished) {
-      if (this.cfg.review) return;
+      if (this.cfg.review || this.net) return;
       try { localStorage.setItem(SAVE_KEY, JSON.stringify({ cfg: { seed: this.cfg.seed, players: this.cfg.players, rules: this.cfg.rules, speed: this.speed }, history: this.game.history, build: AE.BUILD, snap: this.game.snap || null, notes: this.notes, finished: !!finished, ts: Date.now() })); } catch (e) { }
     }
 
     // ───────────── ciclo principale ─────────────
     async start() {
+      if (this.isGuest) return this.guestLoop();
       const g = this.game, gen = g.run();
       let r = gen.next();
       while (!r.done) {
@@ -88,7 +95,11 @@
         if (d.type === 'beat') { await this.showBeat(d.ev); r = gen.next(); continue; }
         const p = g.s.players[d.pid];
         let ans;
-        if (p.kind === 'human' && !g.replay.length) { this.skipping = false; this.refresh(d); ans = await this.humanDecision(d); }
+        if (p.kind === 'human' && !g.replay.length && this.net && this.net.isRemote(d.pid) && !this.aiTakeover[d.pid]) {   // un amico su un altro dispositivo
+          this.refresh(); ans = await this.net.ask(d.pid, d);
+          if (ans == null) ans = this.ais[d.pid] ? this.ais[d.pid].decide(g, d) : 0;
+        }
+        else if (p.kind === 'human' && !g.replay.length && !this.aiTakeover?.[d.pid]) { this.skipping = false; this.refresh(d); ans = await this.humanDecision(d); }
         else { if (this.speed !== 'instant' && !g.replay.length) { this.refresh(); await UI.sleep(this.speed === 'fast' ? 40 : 120); } ans = this.ais[d.pid] ? this.ais[d.pid].decide(g, d) : 0; }
         if (this.aborted) return;
         this.hintCell = null;
@@ -98,12 +109,15 @@
       }
       this.refresh();
       this.save(true);
+      if (this.net) this.net.broadcast({ t: 'end' });
       this.endScreen();
     }
 
     async showBeat(ev) {
       const g = this.game, A = UI.anim;
       const skip = () => { A.takeMoves(); };
+      if (this.net && !this.isGuest) this.net.broadcast({ t: 'beat', ev });
+      if (this.isGuest && this.net.q.length && ev.k !== 'end') return skip();        // sono indietro: salto i messaggi
       if (g.replay.length && !this.cfg.review) return skip();           // ripresa: niente messaggi
       const always = ALWAYS_CLICK.includes(ev.k);
       if (this.skipping && !(ev.k === 'end')) { if (this.mode === 'play') return skip(); }
@@ -147,6 +161,55 @@
     }
     advance() { UI.anim.finishAll(); clearTimeout(this.beatTimer); const r = this.beatResolve; this.beatResolve = null; if (r) r(); }
 
+    // ───────────── partita in rete ─────────────
+    setupHostNet() {
+      const net = this.net, g = this.game;
+      net.snapshot = (full) => ({ s: g.s, evs: g.events.slice(full ? -300 : -60) });
+      net.onOffline = (pid, guest) => this.offlineDialog(pid, guest);
+      net.onBack = (pid) => { this.offlineOpen = false; UI.toast(`${this.game.s.players[pid].name} è tornato in partita`); UI.modal.close(); this.refresh(); };
+      net.onLobby = () => this.renderNav();
+      UI.net.keepAwake();
+    }
+    offlineDialog(pid, guest) {
+      const name = this.game.s.players[pid].name;
+      UI.toast(`${name} si è disconnesso`);
+      if (this.offlineOpen) return;
+      this.offlineOpen = true;
+      const close = () => { this.offlineOpen = false; UI.modal.close(); };
+      UI.modal.open(h('div', {}, h('h3', {}, `📴 ${name} non è più collegato`), h('p', {}, 'Può rientrare dallo stesso link con lo stesso nome e la partita riprende da dove era. Intanto puoi aspettare, oppure far giocare l’AI al suo posto da ora in poi.'),
+        h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: close }, 'Aspetto che torni'), h('button', { class: 'btn warn', onclick: () => { this.aiTakeover[pid] = true; this.ais[pid] = AE.AI.create('medium', `${this.cfg.seed}:${pid}:t`); this.net.cancel(pid); close(); } }, `🤖 L’AI gioca al posto di ${name}`))), { lock: true });
+    }
+    async guestLoop() {
+      const net = this.net, g = this.game;
+      net.onLost = () => { if (!this.aborted) this.lostDialog(); };
+      UI.net.keepAwake();
+      this.refresh();
+      while (!this.aborted) {
+        const m = await net.next();
+        if (this.aborted) return;
+        this.applyRemote(m);
+        if (m.t === 'beat') { await this.showBeat(m.ev); }
+        else if (m.t === 'decide') {
+          this.skipping = false; this.refresh(m.d);
+          const i = await this.humanDecision(m.d);
+          if (this.aborted) return;
+          net.send({ t: 'ans', id: m.id, i });
+        } else if (m.t === 'end') { this.refresh(); this.endScreen(); return; }
+        else this.refresh();
+      }
+    }
+    applyRemote(m) {
+      const g = this.game;
+      if (m.s) g.s = m.s;
+      for (const ev of (m.evs || [])) if (ev.i >= g.events.length) { g.events[ev.i] = ev; this.onEvent(ev); }
+      g.result = m.s && m.s.over ? { winner: m.s.winner, why: '', rounds: m.s.round, turns: m.s.turnNo } : null;
+    }
+    lostDialog() {
+      if (this.lostOpen) return; this.lostOpen = true;
+      UI.modal.open(h('div', {}, h('h3', {}, '📴 Collegamento perso'), h('p', {}, 'Il collegamento con il tavolo si è interrotto. Se il tavolo è ancora aperto puoi riconnetterti con lo stesso nome: la partita riprende da dove era.'),
+        h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: () => { this.lostOpen = false; UI.modal.close(); UI.rejoin(this.net.code, this.net.name); } }, '🔄 Riconnetti'), h('button', { class: 'btn', onclick: () => { this.lostOpen = false; UI.modal.close(); UI.go('home'); } }, 'Esci'))), { lock: true });
+    }
+
     // ───────────── rendering ─────────────
     refresh(dec, ev) {
       const g = this.game, svg = $('#board'); if (!svg) return;
@@ -161,7 +224,10 @@
     idleHtml() {
       const g = this.game;
       if (this.cfg.review) return '<b>Rivedi la partita:</b> avanza con i messaggi (clic, Spazio o Invio).';
-      return g.s.over ? '<b>Partita finita.</b>' : '<span class="dim">Sta giocando l’AI… ' + (g.s.players[g.s.cur] ? esc(g.s.players[g.s.cur].name) : '') + '</span>';
+      const cp = g.s.players[g.s.cur];
+      if (g.s.over) return '<b>Partita finita.</b>';
+      if (this.net && cp && cp.kind === 'human') return `<span class="dim">Tocca a <b>${esc(cp.name)}</b>${cp.id === this.view ? '' : ' (altro dispositivo): aspetta…'}</span>`;
+      return '<span class="dim">Sta giocando l’AI… ' + (cp ? esc(cp.name) : '') + '</span>';
     }
     renderStatus() {
       const g = this.game, s = g.s, st = $('#status'); if (!st) return;
@@ -207,7 +273,7 @@
       const st = p.status === 'alive' ? '' : p.status === 'pending' ? ' · ⏳ in attesa di rientrare' : p.status === 'ghost' ? ' · 👻 Fastidio' : ' · fuori';
       const card = h('div', { class: 'pl ' + (s.cur === p.id && !s.over ? 'cur ' : '') + (p.status === 'alive' ? '' : 'dead'), onclick: () => { this.view = p.id; this.tab = 'hand'; this.renderTabs(); this.renderPane(); } },
         h('img', { class: 'av', src: UI.charImg(p.char), style: `border-color:${UI.col(p.id)}`, alt: ch.n }),
-        h('div', {}, h('div', { html: `<b>${esc(p.name)}</b> · ${esc(ch.n)} <span class="mini">(${esc(ch.role)})${p.kind === 'human' ? ' · tu' : ' · ' + AE.LEVEL_NAMES[p.level || 'medium']}${st}</span>` }),
+        h('div', {}, h('div', { html: `<b>${esc(p.name)}</b> · ${esc(ch.n)} <span class="mini">(${esc(ch.role)})${p.kind === 'human' ? (this.net ? (p.id === this.view ? ' · tu' : ' · umano') : ' · tu') : ' · ' + AE.LEVEL_NAMES[p.level || 'medium']}${st}</span>` }),
           h('div', { class: 'stats', html: `<span class="stat">${icon('pv', 20)} ${Math.max(0, p.hp)}</span><span class="stat">${icon('mana', 20)} <span class="pips">${pips}</span></span><span class="stat">${icon('coin', 20)} ${p.coins}</span><span class="stat">${icon('V', 18)}${p.cubes.V} ${icon('U', 18)}${p.cubes.U} ${icon('M', 18)}${p.cubes.M}</span>${p.ultiHeld ? `<span class="stat" title="Ulti pronta">${icon('ulti', 20)}</span>` : p.ultiUsed ? '<span class="stat dim" title="Ulti usata">✖</span>' : ''}<span class="stat" title="Rientri">${icon('rientro', 18)} ${p.reentries}</span>` }),
           h('div', { class: 'mini', html: (wp || 'nessuna arma') + (p.armor ? ` · ${icon('armor', 14)} ${AE.ARMORS[p.armor.id].n} (${p.armor.dur})` : '') + (vis ? '' : ` · mano: ${p.skills.length + p.heal.length + p.specials.length + p.projects.length} carte`) })));
       return card;
@@ -380,12 +446,12 @@
     endScreen() {
       const g = this.game, r = g.result, s = g.s;
       const w = r && r.winner != null ? s.players[r.winner] : null;
-      const rows = s.players.map((p) => `<tr><td>${esc(p.name)} (${esc(AE.CHARS[AE.CHAR_IDX[p.char]].n)})</td><td>${p.kills}</td><td>${g.stats.p[p.id].damageDealt || 0}</td><td>${g.stats.p[p.id].damageTaken || 0}</td></tr>`).join('');
+      const rows = s.players.map((p) => `<tr><td>${esc(p.name)} (${esc(AE.CHARS[AE.CHAR_IDX[p.char]].n)})</td><td>${p.kills}</td><td>${this.isGuest ? '—' : (g.stats.p[p.id].damageDealt || 0)}</td><td>${this.isGuest ? '—' : (g.stats.p[p.id].damageTaken || 0)}</td></tr>`).join('');
       const m = UI.modal.open(h('div', {}, h('h2', { html: w ? `🏆 Vince ${esc(w.name)}!` : '🏁 Nessun vincitore' }), h('p', {}, `${r ? r.why : ''} · ${s.round} round · ${s.turnNo} turni · seed ${this.cfg.seed}`), h('div', { html: `<table><tr><th>Giocatore</th><th>Eliminazioni</th><th>Danni inflitti</th><th>Danni subiti</th></tr>${rows}</table>` }),
         h('div', { class: 'row', style: 'margin-top:12px' },
           h('button', { class: 'btn primary', onclick: () => { UI.modal.close(); UI.go('home'); } }, 'Menu'),
-          h('button', { class: 'btn', onclick: () => { UI.modal.close(); UI.startSession({ seed: this.cfg.seed, players: this.cfg.players, rules: this.cfg.rules, history: g.history.slice(), review: true, speed: 'manual' }); } }, '⏪ Rivedi la partita'),
-          h('button', { class: 'btn', onclick: () => { UI.modal.close(); UI.startSession({ seed: this.cfg.seed, players: this.cfg.players, rules: this.cfg.rules }); } }, '🔁 Rigioca dallo stesso seed'),
+          this.net ? null : h('button', { class: 'btn', onclick: () => { UI.modal.close(); UI.startSession({ seed: this.cfg.seed, players: this.cfg.players, rules: this.cfg.rules, history: g.history.slice(), review: true, speed: 'manual' }); } }, '⏪ Rivedi la partita'),
+          this.net ? null : h('button', { class: 'btn', onclick: () => { UI.modal.close(); UI.startSession({ seed: this.cfg.seed, players: this.cfg.players, rules: this.cfg.rules }); } }, '🔁 Rigioca dallo stesso seed'),
           h('button', { class: 'btn', onclick: () => this.exportLog() }, '💾 Esporta cronaca'))));
     }
   }

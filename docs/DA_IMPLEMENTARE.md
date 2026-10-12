@@ -18,3 +18,9 @@ Stato: ⬜ da fare · 🟨 fatto in modo semplificato · ✅ fatto
 ## Regole eliminate o spente (restano nel codice come parametri/varianti)
 
 Per ora nessuna regola è stata eliminata. Varianti spente di default: `punchMax` (pugni per turno), `shelterLimit` (turni di fila in un Rifugio). Gli interruttori a disposizione in `AE.DEFAULT_RULES`: `godNocyTemp` (l'eccesso di PV di God_Nocy è temporaneo), `godNocyRange`, `startCoins`, `inv.*`.
+
+## Partita in rete: da fare / limiti noti
+- **Informazione nascosta:** ogni dispositivo riceve lo stato completo (mani e mazzi degli altri compresi); l'interfaccia non li mostra, ma chi sapesse aprire gli strumenti del browser potrebbe vederli. Per giocare tra amici va bene; per una versione pubblica serve una vista filtrata per giocatore.
+- **Non provato su iPad/telefoni veri:** verificato con tre browser Chromium sullo stesso computer. Su wifi che isolano i dispositivi (ospiti) o con reti mobili restrittive il collegamento diretto può non partire.
+- **Salvataggio e ripresa:** in rete non si salva la partita; se il tavolo (host) chiude l'app la partita finisce.
+- **Schermo acceso:** l'app chiede di tenere lo schermo acceso (se il dispositivo lo permette); se l'iPad va in standby il collegamento può cadere. Il dispositivo che fa da tavolo è il più importante da tenere attivo.

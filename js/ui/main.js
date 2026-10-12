@@ -76,13 +76,15 @@
         h('div', { class: 'card' }, h('h3', {}, 'Nuova partita'), h('div', { class: 'row' }, nsel, h('label', {}, 'Seed', seed)), h('div', { class: 'small dim' }, 'Il posto #1 è l’umano (se lo imposti), gli altri sono AI. Con il seed puoi rigiocare la stessa partita.'), seatsBox, rulesBox,
           h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn primary', onclick: () => play('vs') }, '▶ Gioca contro l’AI'), h('button', { class: 'btn', onclick: () => play('watch') }, '🍿 AI contro AI (da guardare)'), h('button', { class: 'btn', onclick: () => play('custom') }, 'Parti con i posti scelti'))),
         h('div', { class: 'card' }, h('h3', {}, 'Riprendi'), save && !save.finished ? h('div', {}, h('p', {}, `Partita in corso (seed ${save.cfg.seed}, ${save.cfg.players.length} giocatori, ${save.history.length} decisioni).`), h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: () => resumeSave(save) }, '⏯ Riprendi'), h('button', { class: 'btn warn', onclick: () => { UI.clearSave(); UI.homeScreen(); } }, 'Scarta il salvataggio'))) : h('p', { class: 'dim' }, 'Nessuna partita da riprendere. Il salvataggio è automatico.'),
+          h('h3', { style: 'margin-top:16px' }, '👥 Con gli amici'), h('div', { class: 'small dim' }, 'Più giocatori su dispositivi diversi (tutti i posti che vuoi, gli altri li gioca l’AI).'), h('div', { class: 'row', style: 'margin-top:6px' }, h('button', { class: 'btn primary', onclick: () => UI.lobbyHost() }, '🏠 Crea una stanza'), h('button', { class: 'btn', onclick: () => UI.joinScreen() }, '🚪 Unisciti a una stanza')),
           h('h3', { style: 'margin-top:16px' }, 'Come si gioca'), h('div', { class: 'small' }, 'Essere l’ultimo giocatore in vita. Muoviti con 2D6 (1D6 quando restano solo i livelli 1–2), fermati sulle tessere per raccogliere carte, crafta armi, attacca con la sfida dei dadi e usa Skill e Ulti. La mappa si restringe a ogni giornata.'), h('div', { class: 'row', style: 'margin-top:8px' }, h('button', { class: 'btn', onclick: () => UI.go('rules') }, '📖 Regolamento completo'), h('button', { class: 'btn', onclick: () => UI.go('sim') }, '📊 Simulatore'), h('a', { class: 'btn primary', href: 'stampa/index.html', style: 'text-decoration:none' }, '🖨 Stampa e gioca'))),
         h('div', { class: 'card legend', html: UI.legendHtml() })));
     draw();
   };
 
   document.addEventListener('DOMContentLoaded', () => {
-    UI.go('home');
+    const jc = new URLSearchParams(location.search).get('join');
+    if (jc) UI.joinScreen(jc); else UI.go('home');
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(() => { });
   });
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -54,3 +54,6 @@ Le tessere e le carte sono **esattamente quelle** del repo `Arena-Extinctio-Rego
 - **RNG con seed** e cronologia delle risposte (`game.history`) → ogni partita è riproducibile, si salva e si rivede.
 - **Informazione nascosta**: l'AI non legge Skill, progetti e cure in mano agli avversari, né l'ordine dei mazzi, né i dadi futuri; un test lo verifica.
 - Parametri delle regole in un unico oggetto, modificabili dall'interfaccia (per gli esperimenti).
+
+## Partita con gli amici (più dispositivi)
+Dalla home: **Crea una stanza** (il tuo dispositivo fa da tavolo) e gli amici **Unisciti a una stanza** con il codice di 4 caratteri o dal link. Per ogni posto scegli: tu, un amico su un altro dispositivo oppure un'AI (qualsiasi combinazione, da 2 a 6 posti). Il collegamento è diretto fra i dispositivi (WebRTC, libreria PeerJS in `js/vendor/`); il servizio pubblico di PeerJS serve solo a farli trovare, quindi serve internet **al momento del collegamento**. Se un amico si disconnette, il tavolo può aspettarlo (rientra con lo stesso nome) oppure far giocare l'AI al suo posto. Prove nel browser: `tools/peer-server.js` + `tools/e2e-net.js` e `tools/e2e-net-drop.js`.

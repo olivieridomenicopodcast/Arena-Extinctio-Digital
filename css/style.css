@@ -140,3 +140,6 @@ th{background:#1a0f45}
 
 /* sfondo intorno alla mappa: giorno = azzurro, notte = blu notte */
 #boardWrap.isday{background:#6ec6ff} #boardWrap.isnight{background:#0a1650}
+
+/* partita in rete */
+#nav .pill{background:#0b0526;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:.85em;display:inline-flex;align-items:center}
