@@ -52,7 +52,9 @@
       document.addEventListener('keydown', this.keyHandler);
       $('#banner').addEventListener('click', () => this.advance());
       $('#board').addEventListener('click', (e) => { const g = e.target.closest('[data-ci]'); if (g && this.onCell) this.onCell(+g.dataset.ci); });
-      $('#board').addEventListener('mousemove', (e) => { const g = e.target.closest('[data-ci]'); if (g && this.onHover) this.onHover(+g.dataset.ci); });
+      // L'anteprima del percorso c'è solo col mouse: su iPad/telefono il tocco genera anche movimenti "finti" del mouse, e ridisegnare la mappa
+      // in quel momento faceva perdere il clic (il primo tocco mostrava il percorso ma non la richiesta di conferma).
+      $('#board').addEventListener('pointermove', (e) => { if (e.pointerType !== 'mouse') return; const g = e.target.closest('[data-ci]'); if (g && this.onHover) this.onHover(+g.dataset.ci); });
       this.renderNav();
       this.refresh();
     }
@@ -367,7 +369,7 @@
       const sel = {}; d.options.forEach((o) => { sel[o.cell] = viaPortal(o) ? 'selp' : AE.cellDist(start, o.cell) === d.steps ? 'sel' : 'selw'; }); this.sel = sel;
       const byCell = {}; d.options.forEach((o, i) => { byCell[o.cell] = i; });
       this.onHover = (ci) => { if (byCell[ci] != null) { this.path = [g.cellOfPlayer(d.pid)].concat(d.options[byCell[ci]].path); this.refresh(d); this.sel = sel; UI.renderBoard($('#board'), g, { sel, cur: d.pid, path: this.path, hint: this.hintCell }); } };
-      this.onCell = (ci) => { if (byCell[ci] != null) this.confirmThen({ kind: 'move', label: d.options[byCell[ci]].label }, () => done(byCell[ci])); };
+      this.onCell = (ci) => { if (byCell[ci] != null) { this.onHover(ci); this.confirmThen({ kind: 'move', label: d.options[byCell[ci]].label }, () => done(byCell[ci])); } };   // il percorso si vede anche toccando
       hintBtn(() => { const i = this.suggest(d); this.hintCell = d.options[i].cell; UI.renderBoard($('#board'), g, { sel, cur: d.pid, hint: this.hintCell }); $('#hintTxt').textContent = `Suggerisco: ${d.options[i].label}`; });
       const list = h('div', { class: 'cardrow' });
       d.options.forEach((o, i) => { const t = AE.tile(o.tile); const threat = AE.AI.threatAt(g, d.pid, o.cell); list.append(h('button', { class: 'btn small', title: AE.TILE_TYPES[t.type].d, onmouseenter: () => this.onHover(o.cell), onclick: () => this.confirmThen({ kind: 'move', label: o.label }, () => done(i)) }, `${AE.TILE_TYPES[t.type].i} ${o.label}${threat > 1.5 ? ' ⚠' : ''}${o.stop ? ' 🕸' : ''}${viaPortal(o) ? ' 🌀' : ''}`)); });
