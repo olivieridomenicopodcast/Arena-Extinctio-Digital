@@ -367,7 +367,7 @@
     hazardAt(ci, pid) {
       const tid = this.s.cells[ci].tile; if (!tid) return null;
       let k = null;
-      for (const tr of this.s.traps) if (tr.marks.includes(tid)) { if (tr.kind === 'trap') return 'trap'; k = tr.kind; }
+      for (const tr of this.s.traps) if (tr.marks.includes(tid) && tr.owner !== pid) { if (tr.kind === 'trap') return 'trap'; k = tr.kind; }
       if (k) return k;
       const c = this.s.cloud; if (c && c.tiles.includes(tid) && c.pid !== pid && this.s.periodIdx < c.until) return 'cloud';
       return null;
@@ -504,7 +504,7 @@
       const self = this;
       const tid = this.s.cells[ci].tile;
       const p = this.s.players[pid];
-      const traps = this.s.traps.filter((t) => t.marks.includes(tid));
+      const traps = this.s.traps.filter((t) => t.marks.includes(tid) && t.owner !== pid);   // le proprie trappole e torrette non fanno nulla
       const cloud = this.s.cloud && this.s.cloud.tiles.includes(tid) && this.s.cloud.pid !== pid && this.s.periodIdx < this.s.cloud.until;
       if (!traps.length && !cloud) return null;
       return (function* () {

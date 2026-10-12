@@ -70,6 +70,7 @@ Muoversi e attivare la tessera sono gratis. Le **Skill/effetti di carta** costan
 - **Teletrasporto:** se passi su una tessera portale vieni teletrasportato subito e obbligatoriamente su un altro portale compatibile; l'uscita vale ancora come lo stesso passo, poi continui a camminare. Da un portale A vai su un altro A o sul portale doppio; da un B su un altro B o sul doppio; dal doppio su qualsiasi altro portale; **scegli tu** la destinazione. Non ti puoi fermare su un portale. [chiarito]
 - Se non riesci a consumare tutti i passi, usi quelli che puoi (il massimo raggiungibile) e subisci **1 danno**. [chiarito]
 - Per attivare una tessera devi **fermarti** su di essa: passarci sopra non basta.
+- Le **proprie** trappole e torrette non hanno alcun effetto su chi le ha piazzate: né quando ci passa né quando ci si ferma. [chiarito]
 - **Trappola Rallentante:** se tocchi una tessera segnalata ti fermi subito, fai il turno ma non puoi attaccare; il segnalino calpestato viene tolto. Una **Torretta** infligge 2 danni a chi tocca una tessera segnalata (anche passando) e il segnalino viene tolto. Trappola e torretta hanno 4 PV e restano anche se chi le ha piazzate viene eliminato.
 - Una tessera **bloccata** da un Fastidio non si può attraversare.
 

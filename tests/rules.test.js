@@ -533,3 +533,30 @@ test('non si possono attaccare le proprie trappole e torrette, ma quelle degli a
   g.s.traps[0].owner = 1;
   assert.strictEqual(g.targetsFrom(0, 0).filter((t) => t.kind === 'trap').length, 1);
 });
+
+test('le proprie trappole e torrette non hanno effetto su chi le ha piazzate', () => {
+  const g = mk(2, { layout: layout(), chars: ['kone', 'ricca'] });
+  place(g, 0, 0, 0); prep(g, 0);
+  const tile = g.s.cells[at(1, -1)].tile;
+  g.s.traps.push({ id: 1, kind: 'turret', tile: g.pl(1).at, owner: 0, hp: 4, marks: [tile] });
+  g.s.traps.push({ id: 2, kind: 'trap', tile: g.pl(1).at, owner: 0, hp: 4, marks: [tile] });
+  drive(g.walk(0, [at(1, -1)], at(1, -1)));
+  assert.strictEqual(g.pl(0).hp, 10); assert.strictEqual(!!g.pl(0).turn.slowed, false);
+  assert.strictEqual(g.movementOptions(0, 1).ends.some((e) => e.stop), false, 'nessun arresto forzato sul proprio segnalino');
+});
+
+test('segnalini: \'Nganga che ci passa sopra non li consuma; due torrette di fila = 4 danni e spariscono; un segnalino sparisce solo se attivato', () => {
+  const mkG = (chars) => { const g = mk(2, { layout: layout(), chars }); place(g, 0, 0, 0); prep(g, 0); place(g, 1, 3, -3); return g; };
+  const t1 = (g) => g.s.cells[at(1, 0)].tile, t2 = (g) => g.s.cells[at(2, 0)].tile;
+  // 'Nganga: niente danni e i segnalini restano
+  const a = mkG(['nganga', 'kone']);
+  a.s.traps.push({ id: 1, kind: 'turret', tile: a.pl(1).at, owner: 1, hp: 4, marks: [t1(a), t2(a)] });
+  drive(a.walk(0, [at(1, 0), at(2, 0)], at(2, 0)));
+  assert.strictEqual(a.pl(0).hp, 10); assert.deepStrictEqual(a.s.traps[0].marks.length, 2, 'nessuno ha attivato i segnalini');
+  // un normale: 2 torrette di fila = 4 danni, spariscono entrambi i segnalini attraversati
+  const b = mkG(['kone', 'ricca']);
+  b.s.traps.push({ id: 1, kind: 'turret', tile: b.pl(1).at, owner: 1, hp: 4, marks: [t1(b)] });
+  b.s.traps.push({ id: 2, kind: 'turret', tile: b.pl(1).at, owner: 1, hp: 4, marks: [t2(b)] });
+  drive(b.walk(0, [at(1, 0), at(2, 0)], at(2, 0)));
+  assert.strictEqual(b.pl(0).hp, 6); assert.ok(b.s.traps.every((t) => t.marks.length === 0));
+});
