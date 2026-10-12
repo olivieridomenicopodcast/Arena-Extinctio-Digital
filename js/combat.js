@@ -349,8 +349,8 @@
   };
 
   // ───────────── Ulti ─────────────
-  // Missile di Hatci: va in linea retta nelle 6 direzioni senza limite di gittata, i muri NON lo fermano,
-  // lo fermano le tessere Insormontabili e il primo corpo incontrato (come un proiettile); stessa tessera compresa.
+  // Missile di Hatci: va in linea retta nelle 6 direzioni senza limite di gittata; lo fermano i muri, le tessere Insormontabili
+  // e il primo corpo incontrato (come un proiettile); stessa tessera compresa.
   G.ultiTargets = function (pid) {
     const s = this.s, ci = this.cellOfPlayer(pid), out = [];
     if (ci < 0) return out;
@@ -359,6 +359,7 @@
     for (let d = 0; d < 6; d++) {
       let cur = ci;
       for (;;) {
+        if (this.wallBetween(cur, d)) break;
         const nx = NB[cur][d];
         if (nx < 0 || !this.shootable(nx)) break;
         cur = nx;

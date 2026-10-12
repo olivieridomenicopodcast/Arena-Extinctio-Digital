@@ -130,12 +130,19 @@
         portals.push(P[i - 1], P[i]);
       }
     }
-    // scia del percorso
-    const pts = P.map((ci) => UI.cellXY(ci).map((v) => v.toFixed(1)).join(',')).join(' ');
-    const trail = mk('polyline', { points: pts, fill: 'none', stroke: '#00ffc8', 'stroke-width': 7, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: 0 }, fx);
-    fx.insertBefore(trail, L.el);
+    // scia del percorso: tratto verde per i passi, rosa tratteggiato per il salto del portale (non è un passo che attraversa la mappa)
+    const trails = [];
+    let seg = [P[0]];
+    const xy = (ci) => UI.cellXY(ci).map((v) => v.toFixed(1)).join(',');
+    const flush = () => { if (seg.length > 1) trails.push(mk('polyline', { points: seg.map(xy).join(' '), fill: 'none', stroke: '#00ffc8', 'stroke-width': 7, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: 0 }, fx)); seg = [seg[seg.length - 1]]; };
+    for (let i = 1; i < P.length; i++) {
+      if (AE.NB[P[i - 1]].includes(P[i])) seg.push(P[i]);
+      else { flush(); const a1 = UI.cellXY(P[i - 1]), c1 = UI.cellXY(P[i]); trails.push(mk('line', { x1: a1[0], y1: a1[1], x2: c1[0], y2: c1[1], stroke: '#ff5ad7', 'stroke-width': 5, 'stroke-dasharray': '10 8', opacity: 0 }, fx)); seg = [P[i]]; }
+    }
+    flush();
+    trails.forEach((t) => fx.insertBefore(t, L.el));
     const prom = [run(L.el, kf, { duration: Math.max(600, n * 420) * k, easing: 'linear' }),
-      run(trail, [{ opacity: 0.5 }, { opacity: 0.5, offset: 0.6 }, { opacity: 0 }], { duration: (n * 420 + 600) * k })];
+      ...trails.map((t) => run(t, [{ opacity: 0.55 }, { opacity: 0.55, offset: 0.6 }, { opacity: 0 }], { duration: (n * 420 + 600) * k }))];
     portals.forEach((ci) => prom.push(ring(fx, UI.cellXY(ci), '#ff5ad7', k, 3)));
     A.active.push(L.h);
     return Promise.all(prom).then(() => { L.back(); const i = A.active.indexOf(L.h); if (i >= 0) A.active.splice(i, 1); });

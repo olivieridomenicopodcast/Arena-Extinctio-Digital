@@ -516,13 +516,20 @@ test('fuzz: 30 partite casuali (2-6 giocatori) senza errori, carte mai perse né
   }
 });
 
-test('Ulti di Hatci: solo in linea retta, i muri non fermano, l’insormontabile sì, il primo corpo ferma', () => {
+test('Ulti di Hatci: solo in linea retta, muri e insormontabili la fermano, il primo corpo copre quelli dietro', () => {
   const g = mk(3, { layout: layout(), chars: ['hatci', 'karou', 'ricca'] });
   place(g, 0, 0, 0); place(g, 1, 2, -2); place(g, 2, 1, 1);
   const ids = () => g.ultiTargets(0).map((q) => q.id).sort();
   assert.deepStrictEqual(ids(), [1], '(2,-2) è in linea, (1,1) no');
   place(g, 2, 0, 3); place(g, 1, 0, 2);
   assert.deepStrictEqual(ids(), [1], 'il primo corpo copre quello dietro');
+  // un muro sul lato fra (0,0) e (0,1) (direzione S = 3) blocca anche il missile
+  const w = mk(2, { layout: layout({ [at(0, 0)]: 52 }), chars: ['hatci', 'karou'] });
+  w.s.cells[at(0, 0)].rot = 0;   // tessera 52: muro sul lato S
+  place(w, 0, 0, 0); place(w, 1, 0, 3);
+  assert.deepStrictEqual(w.ultiTargets(0).map((q) => q.id), [], 'il muro ferma il missile');
+  w.s.cells[at(0, 0)].rot = 1;   // muro ruotato su un altro lato: il missile passa
+  assert.deepStrictEqual(w.ultiTargets(0).map((q) => q.id), [1]);
 });
 
 test('non si possono attaccare le proprie trappole e torrette, ma quelle degli altri sì', () => {
