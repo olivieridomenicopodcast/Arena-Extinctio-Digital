@@ -14,9 +14,9 @@
   const dq = (g, ci, q) => { const c = g.cellOfPlayer(q.id); return c < 0 || ci < 0 ? 99 : AE.cellDist(ci, c); };
 
   AI.PARAMS = {
-    easy: { random: 0.55, noise: 2.5, samples: 0, plan: 0, thr: 0.8, aggr: 0.7, shelter: 0.3 },
-    medium: { random: 0.08, noise: 0.9, samples: 0, plan: 1, thr: 0.1, aggr: 1.0, shelter: 0.8 },
-    hard: { random: 0, noise: 0.15, samples: 3, plan: 2, thr: 0.05, aggr: 1.1, shelter: 1.0 },
+    easy: { random: 0.55, noise: 2.5, samples: 0, plan: 0, thr: 0.8, aggr: 0.7, shelter: 0.3, hunt: 0 },
+    medium: { random: 0.08, noise: 0.9, samples: 0, plan: 1, thr: 0.1, aggr: 1.0, shelter: 0.8, hunt: 0.5 },
+    hard: { random: 0, noise: 0.15, samples: 3, plan: 2, thr: 0.05, aggr: 1.1, shelter: 1.0, hunt: 1.0 },
     // profili "estremi" per le prove: strategie sbagliate di proposito, devono perdere
     pacifist: { random: 0.05, noise: 0.5, samples: 0, plan: 1, thr: 0.3, aggr: 1.0, shelter: 0.8, noAttack: true },
     camper: { random: 0.05, noise: 0.5, samples: 0, plan: 1, thr: 0.3, aggr: 0.6, shelter: 0.8, camp: true },
@@ -71,7 +71,7 @@
         break;
       }
       case 'ulti': v = t.owner === pid && s.crater[t.id] && !p.ultiHeld ? 3.2 : 0; break;
-      case 'rifugio': v = 0.7 + (p.hp <= 5 ? 1.5 : 0); break;
+      case 'rifugio': v = p.hp >= 8 ? 0.05 : p.hp >= 6 ? 0.6 : 2.2; break;
       case 'luogo': v = (p.at === t.id ? 0 : 0.3) + (t.owner === pid ? 0.5 : 0.3); break;
       default: v = 0;
     }
@@ -209,6 +209,10 @@
       if (!opp && p.mana >= 0) { for (const q of s.players) if (q.id !== pid && q.status === 'alive' && q.at === tid && !g.inShelter(q.id)) opp = Math.max(opp, 0.4); }
       p.at = saved;
       v += opp * P.aggr * 0.9;
+      if (P.hunt) {   // caccia: avvicinarsi ai bersagli esposti, soprattutto se feriti (se si ha un'arma)
+        const armed = ['primary', 'secondary', 'melee'].some((sl) => p.weapons[sl] && p.weapons[sl].ammo > 0);
+        for (const q of s.players) { if (q.id === pid || q.status !== 'alive' || g.inShelter(q.id)) continue; const dd = dq(g, o.cell, q); if (dd <= 7) v += P.hunt * ((8 - dd) / 8) * (q.hp <= 5 ? 1.4 : 1) * (armed ? 1 : 0.3); }
+      }
       // restare vicino al centro quando i livelli esterni stanno per sparire, avvicinarsi agli avversari quando si è forti
       const lvl = AE.CELLS[o.cell].level;
       v += (6 - lvl) * 0.05 * (6 - g.levelsLeft() * 0 );

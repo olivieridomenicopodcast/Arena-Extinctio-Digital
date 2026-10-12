@@ -20,7 +20,7 @@ const server = http.createServer((req, res) => { let p = decodeURIComponent(req.
     const acts = p.locator('#actionPanel .act:not([disabled])'); if (await acts.count()) { await acts.last().click(); await p.waitForTimeout(10); continue; }
     const opts = p.locator('#actionPanel .opt:not([disabled])'); if (await opts.count()) { await opts.first().click(); continue; }
     await p.waitForTimeout(20);
-    const m = (await p.locator('#status').innerText()).match(/Round\s+(\d+)/); if (m && +m[1] >= 4 && await p.locator('#actionPanel .act').count()) break;
+    const m = (await p.locator('#status').innerText()).match(/Round\s+(\d+)/); if (m && +m[1] >= 4 && await p.locator('#actionPanel .act').count() && await p.evaluate(() => !!AE.UI.session.choiceResolve && !document.querySelector('#banner').offsetParent === false || (!!AE.UI.session.choiceResolve && getComputedStyle(document.querySelector('#banner')).display === 'none'))) break;
   }
   const before = { status: await p.locator('#status').innerText(), players: await p.locator('#pane').innerText(), state: await p.evaluate(() => JSON.stringify(AE.UI.session.game.s)) };
   const save = await p.evaluate(() => localStorage.getItem('ae-save-v1'));
@@ -34,7 +34,7 @@ const server = http.createServer((req, res) => { let p = decodeURIComponent(req.
   check(r1 === r2, `stesso round dopo la ripresa (${r1} → ${r2})`);
   const same = before.players.replace(/\s+/g, ' ') === after.players.replace(/\s+/g, ' ');
   check(same, 'stessi PV, mana, monete e armi di tutti dopo la ripresa');
-  if (!same) { const A = JSON.parse(before.state), B = JSON.parse(after.state); for (const k in A) if (JSON.stringify(A[k]) !== JSON.stringify(B[k])) console.log('   stato diverso in', k, k === 'players' ? A[k].map((x, i) => JSON.stringify(x) === JSON.stringify(B[k][i]) ? '=' : 'DIVERSO ' + i).join(' ') : ''); fs.writeFileSync(out + '/fail-save.json', save); const a = before.players.split('\n'), c = after.players.split('\n'); for (let i = 0; i < Math.max(a.length, c.length); i++) if (a[i] !== c[i]) console.log('   prima:', a[i], '| dopo:', c[i]); }
+  if (!same) { const A = JSON.parse(before.state), B = JSON.parse(after.state); for (const k in A) if (JSON.stringify(A[k]) !== JSON.stringify(B[k])) console.log('   stato diverso in', k, k === 'players' ? A[k].map((x, i) => JSON.stringify(x) === JSON.stringify(B[k][i]) ? '=' : 'DIVERSO ' + i).join(' ') : ''); fs.writeFileSync(out + '/fail-save.json', save); fs.writeFileSync(out + '/fail-before.json', before.state); fs.writeFileSync(out + '/fail-after.json', after.state); const a = before.players.split('\n'), c = after.players.split('\n'); for (let i = 0; i < Math.max(a.length, c.length); i++) if (a[i] !== c[i]) console.log('   prima:', a[i], '| dopo:', c[i]); }
   await p.screenshot({ path: out + '/ripresa.png' });
   // regole
   await p.click('button:has-text("Menu")'); await p.click('#nav >> text=Regole'); await p.waitForTimeout(200);

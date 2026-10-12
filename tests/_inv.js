@@ -23,8 +23,8 @@ function check(g) {
   const tiles = s.cells.map((c) => c.tile).filter(Boolean).concat(s.removedTiles);
   if (new Set(tiles).size !== 61 || tiles.length !== 61) errs.push('tessere non 61 uniche: ' + tiles.length);
   for (const p of s.players) {
-    if (p.hp > g.rules.healthCap + 2) errs.push(`${p.name} hp ${p.hp}`);
-    if (p.mana < 0 || p.mana > 6) errs.push(`${p.name} mana ${p.mana}`);
+    if (p.hp > g.rules.healthCap + 2) errs.push(`${p.name} hp ${p.hp}`);   // +2: God_Nocy può superare il massimo in modo temporaneo
+    if (p.mana < 0 || p.mana > g.rules.manaSfera) errs.push(`${p.name} mana ${p.mana}`);
     if (p.coins < 0 || p.coins > g.rules.coinsMax) errs.push(`${p.name} monete ${p.coins}`);
     for (const k of AE.RES_KEYS) if (p.cubes[k] < 0 || p.cubes[k] > g.capCubes(p.id)) errs.push(`${p.name} cubetti ${k} ${p.cubes[k]}`);
     if (p.heal.length > g.rules.inv.heal) errs.push(`${p.name} troppi heal`);

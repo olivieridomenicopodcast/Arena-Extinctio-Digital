@@ -62,6 +62,9 @@
       cfg = cfg || {};
       this.cfg = cfg;
       this.rules = Object.assign({}, AE.DEFAULT_RULES, cfg.rules || {});
+      // negli esperimenti: cambiando i PV iniziali o il mana, il massimo segue (salvo indicazione esplicita)
+      if (cfg.rules && cfg.rules.hp != null && cfg.rules.healthCap == null) this.rules.healthCap = cfg.rules.hp;
+      if (cfg.rules && cfg.rules.mana != null && cfg.rules.manaSfera == null) this.rules.manaSfera = cfg.rules.mana + 1;
       this.logOn = cfg.log !== false;
       this.statsOn = cfg.stats !== false;
       this.beats = !!cfg.beats;
