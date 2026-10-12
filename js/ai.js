@@ -283,7 +283,7 @@
           let v = 0;
           if (o.deck === 'mat') v = 1.1 + need * 1.8 + (p.hp <= 6 ? 0.6 : 0);
           else if (o.deck === 'proj') v = (p.projects.length >= g.capProj(pid) * 3 ? -2 : 1.4) + (Object.values(p.weapons).some(Boolean) ? 0 : 0.6);
-          else v = (p.skills.length >= R.inv.skill ? -1.5 : 1.1);
+          else v = (p.skills.length >= R.inv.skill ? -1.5 : 1.1 + (p.skills.length === 0 ? 0.5 : 0.15));
           if (o.from === 'display') { const cv = cardValue(o.card); v = v * 0.5 + cv * 0.6 - ((o.card === 'sp:mina' || o.card === 'sp:svantaggio') ? 6 : 0); if (o.card === 'sp:mina' || o.card === 'sp:svantaggio') return -9; }
           return v - o.price * 0.35 - 0.3 + (p.coins - o.price >= 6 ? 0.4 : 0);
         }
@@ -419,7 +419,7 @@
       const p = g.pl(pid), R = g.rules;
       if (d === 'mat') return 0.8 + needScore(g, pid) * 2 + (p.hp <= 6 ? 0.5 : 0);
       if (d === 'proj') return (p.projects.length >= g.capProj(pid) * 2 ? -1 : 1.2) + (Object.values(p.weapons).some(Boolean) ? 0 : 0.4);
-      return p.skills.length >= R.inv.skill ? -0.8 : 1.0;
+      return p.skills.length >= R.inv.skill ? -0.8 : 1.0 + (p.skills.length === 0 ? 0.5 : 0.15);   // senza nessuna skill in mano il mazzo Skill vale di più
     }
     function decideCell(g, dec, argmax) {
       const pid = dec.pid, s = g.s, me = g.cellOfPlayer(pid);
