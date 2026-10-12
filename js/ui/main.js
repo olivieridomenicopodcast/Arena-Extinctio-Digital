@@ -76,15 +76,27 @@
         h('div', { class: 'card' }, h('h3', {}, 'Nuova partita'), h('div', { class: 'row' }, nsel, h('label', {}, 'Seed', seed)), h('div', { class: 'small dim' }, 'Il posto #1 è l’umano (se lo imposti), gli altri sono AI. Con il seed puoi rigiocare la stessa partita.'), seatsBox, rulesBox,
           h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn primary', onclick: () => play('vs') }, '▶ Gioca contro l’AI'), h('button', { class: 'btn', onclick: () => play('watch') }, '🍿 AI contro AI (da guardare)'), h('button', { class: 'btn', onclick: () => play('custom') }, 'Parti con i posti scelti'))),
         h('div', { class: 'card' }, h('h3', {}, 'Riprendi'), save && !save.finished ? h('div', {}, h('p', {}, `Partita in corso (seed ${save.cfg.seed}, ${save.cfg.players.length} giocatori, ${save.history.length} decisioni).`), h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: () => resumeSave(save) }, '⏯ Riprendi'), h('button', { class: 'btn warn', onclick: () => { UI.clearSave(); UI.homeScreen(); } }, 'Scarta il salvataggio'))) : h('p', { class: 'dim' }, 'Nessuna partita da riprendere. Il salvataggio è automatico.'),
-          h('h3', { style: 'margin-top:16px' }, '👥 Con gli amici'), h('div', { class: 'small dim' }, 'Più giocatori su dispositivi diversi (tutti i posti che vuoi, gli altri li gioca l’AI).'), h('div', { class: 'row', style: 'margin-top:6px' }, h('button', { class: 'btn primary', onclick: () => UI.lobbyHost() }, '🏠 Crea una stanza'), h('button', { class: 'btn', onclick: () => UI.joinScreen() }, '🚪 Unisciti a una stanza')),
+          h('h3', { style: 'margin-top:16px' }, '👥 Con gli amici'), h('div', { class: 'small dim' }, 'Più giocatori su dispositivi diversi (tutti i posti che vuoi, gli altri li gioca l’AI).'), h('div', { class: 'row', style: 'margin-top:6px' }, h('button', { class: 'btn primary', onclick: () => UI.safe(() => UI.lobbyHost(), 'lobbyHost') }, '🏠 Crea una stanza'), h('button', { class: 'btn', onclick: () => UI.safe(() => UI.joinScreen(), 'joinScreen') }, '🚪 Unisciti a una stanza')),
           h('h3', { style: 'margin-top:16px' }, 'Come si gioca'), h('div', { class: 'small' }, 'Essere l’ultimo giocatore in vita. Muoviti con 2D6 (1D6 quando restano solo i livelli 1–2), fermati sulle tessere per raccogliere carte, crafta armi, attacca con la sfida dei dadi e usa Skill e Ulti. La mappa si restringe a ogni giornata.'), h('div', { class: 'row', style: 'margin-top:8px' }, h('button', { class: 'btn', onclick: () => UI.go('rules') }, '📖 Regolamento completo'), h('button', { class: 'btn', onclick: () => UI.go('sim') }, '📊 Simulatore'), h('a', { class: 'btn primary', href: 'stampa/index.html', style: 'text-decoration:none' }, '🖨 Stampa e gioca'))),
         h('div', { class: 'card legend', html: UI.legendHtml() })));
     draw();
+    const ver = h('div', { class: 'small dim', style: 'text-align:center;margin-top:12px' }, 'Versione ' + (AE.BUILD || '?'));
+    el.append(ver);
+    try { caches.keys().then((ks) => { const k = ks.find((x) => /^ae-v/.test(x)); if (k) ver.textContent += ' · ' + k; }); } catch (e) { /* ok */ }
   };
 
+  // Se qualcosa non va, l'errore si vede (prima falliva in silenzio e sembrava che il pulsante non facesse nulla)
+  UI.safe = (fn, name) => {
+    if (name && typeof UI[name] !== 'function') { UI.toast('Questa pagina non è aggiornata (manca “' + name + '”): ricarica la pagina, se non basta chiudi e riapri l’app. Versione: ' + (AE.BUILD || '?')); return; }
+    try { return fn(); } catch (e) { UI.toast('Errore: ' + (e && e.message)); console.error(e); }
+  };
+  window.addEventListener('error', (e) => { try { UI.toast('Errore: ' + e.message); } catch (x) { /* ok */ } });
+  window.addEventListener('unhandledrejection', (e) => { try { UI.toast('Errore: ' + (e.reason && e.reason.message || e.reason)); } catch (x) { /* ok */ } });
   document.addEventListener('DOMContentLoaded', () => {
     const jc = new URLSearchParams(location.search).get('join');
     if (jc) UI.joinScreen(jc); else UI.go('home');
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(() => { });
+    // quando arriva una versione nuova e non c'è una partita in corso, ricarica per usare file tutti coerenti
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) navigator.serviceWorker.addEventListener('controllerchange', () => { if (!UI.session || UI.session.aborted || !UI.session.game || UI.session.game.s.over) location.reload(); });
   });
 })(typeof window !== 'undefined' ? window : globalThis);
