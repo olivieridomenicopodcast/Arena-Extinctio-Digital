@@ -27,6 +27,13 @@
   document.addEventListener('click', (e) => { const bg = UI.$('#modalBg'); if (e.target === bg && !bg.dataset.lock) UI.modal.close(); });
   UI.zoom = (src) => { const lb = UI.$('#lightbox'); UI.$('img', lb).src = src; lb.style.display = 'flex'; };
   document.addEventListener('click', (e) => { const lb = UI.$('#lightbox'); if (lb.style.display === 'flex' && lb.contains(e.target)) lb.style.display = 'none'; });
+  // dopo quante giornate sparisce il prossimo livello della mappa (5-4-3 di base): modifica direttamente l'array `arr`
+  UI.levelDaysBox = (arr) => {
+    const ins = [0, 1, 2].map((i) => UI.h('input', { type: 'number', min: 1, max: 30, value: arr[i], style: 'width:64px', title: `Giornate prima di togliere il livello ${5 - i}`, oninput: (e) => { const v = Math.max(1, Math.min(30, Math.round(+e.target.value) || 1)); arr[i] = v; } }));
+    return UI.h('div', { class: 'card', style: 'margin:8px 0;padding:10px' }, UI.h('div', { class: 'small', html: '<b>⬛ Plancia Tempo</b> — dopo quante giornate sparisce il prossimo livello della mappa (una giornata = giorno + notte):' }),
+      UI.h('div', { class: 'row', style: 'align-items:center;margin-top:6px' }, UI.h('span', { class: 'small' }, 'Livello 5 dopo'), ins[0], UI.h('span', { class: 'small' }, 'poi livello 4 dopo altre'), ins[1], UI.h('span', { class: 'small' }, 'poi livello 3 dopo altre'), ins[2], UI.h('span', { class: 'small dim' }, '(base: 5 – 4 – 3)'),
+        UI.h('button', { class: 'btn small', onclick: () => { const d = AE.DEFAULT_RULES.levelDays; d.forEach((v, i) => { arr[i] = v; ins[i].value = v; }); } }, 'Ripristina')));
+  };
   UI.toast = (txt) => { const t = UI.h('div', { class: 'toast' }, txt); document.body.append(t); setTimeout(() => t.remove(), txt.length > 60 ? 9000 : 2600); };
   UI.cardImg = (id, extra) => {
     const src = id.startsWith('eq:') ? AE.CARD_IMG(id.slice(3)) : id.startsWith('cube:') ? null : AE.CARD_IMG(id);

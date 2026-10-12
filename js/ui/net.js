@@ -8,6 +8,9 @@
   const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const PREFIX = 'arena-extinctio-';
   const net = UI.net = {};
+  const NC = AE.NetCore;
+  // spedisce un messaggio (a pezzi se è grande): vedi js/netcore.js
+  net.sendMsg = (conn, msg) => { for (const w of NC.encode(msg)) conn.send(w); };
   net.available = () => typeof root.Peer === 'function';
   net.newCode = () => { let c = ''; for (let i = 0; i < 4; i++) c += ALPHA[Math.floor(Math.random() * ALPHA.length)]; return c; };
   net.peerOpts = () => {
@@ -41,7 +44,8 @@
       });
     }
     _incoming(conn) {
-      conn.on('data', (m) => this._data(conn, m));
+      const asm = new NC.Assembler();
+      conn.on('data', (m) => { const f = asm.push(m); if (f) this._data(conn, f); });
       conn.on('close', () => this._closed(conn));
       conn.on('error', () => this._closed(conn));
     }
@@ -52,11 +56,16 @@
       if (m.t === 'ping') return;
       if (m.t === 'hello') {
         const name = String(m.name || 'Amico').slice(0, 20).trim() || 'Amico';
+        if (this.allowed && !this.allowed.includes(name)) {      // ripresa: entra solo chi era nella partita salvata
+          net.sendMsg(conn, { t: 'reject', why: 'Questa partita salvata è con: ' + this.allowed.join(', ') + '. Rientra con uno di questi nomi.' });
+          if (this.onRejected) this.onRejected(name);
+          return;
+        }
         const old = this.guests.find((g) => g.name === name);
         if (old && !old.online) { old.conn = conn; old.online = true; old.seen = Date.now(); this._rejoin(old); this._lobby(); return; }
-        if (old) { conn.send({ t: 'reject', why: 'Esiste già un giocatore con questo nome in stanza.' }); return; }
-        if (this.started) { conn.send({ t: 'reject', why: 'La partita è già iniziata.' }); return; }
-        if (this.maxGuests != null && this.guests.length >= this.maxGuests) { conn.send({ t: 'reject', why: 'La stanza è piena.' }); return; }
+        if (old) { net.sendMsg(conn, { t: 'reject', why: 'Esiste già un giocatore con questo nome in stanza.' }); return; }
+        if (this.started) { net.sendMsg(conn, { t: 'reject', why: 'La partita è già iniziata.' }); return; }
+        if (this.maxGuests != null && this.guests.length >= this.maxGuests) { net.sendMsg(conn, { t: 'reject', why: 'La stanza è piena.' }); return; }
         this.guests.push({ name, conn, online: true, seen: Date.now() });
         this._lobby();
       } else if (m.t === 'ans') {
@@ -75,19 +84,24 @@
     _sendLobby() {
       if (this.started) return;
       const names = this.guests.map((g) => g.name);
-      for (const g of this.guests) if (g.online) { try { g.conn.send({ t: 'lobby', names, you: g.name, info: this.lobbyInfo || '' }); } catch (e) { /* ok */ } }
+      for (const g of this.guests) if (g.online) { try { net.sendMsg(g.conn, { t: 'lobby', names, you: g.name, info: this.lobbyInfo || '' }); } catch (e) { /* ok */ } }
     }
     // inizio partita: `map` = [{ guest, pid }]; `meta` = ciò che serve al guest per costruire la sua copia
     begin(map, meta) {
       this.started = true; this.meta = meta; this.pidGuest = {};
       for (const m of map) this.pidGuest[m.pid] = m.guest;
-      for (const g of this.guests) if (!map.some((m) => m.guest === g) && g.online) { try { g.conn.send({ t: 'reject', why: 'Non c’è un posto per te in questa partita.' }); } catch (e) { /* ok */ } }
+      for (const g of this.guests) if (!map.some((m) => m.guest === g) && g.online) { try { net.sendMsg(g.conn, { t: 'reject', why: 'Non c’è un posto per te in questa partita.' }); } catch (e) { /* ok */ } }
       for (const m of map) this._sendStart(m.guest, m.pid);
     }
     isRemote(pid) { return !!this.pidGuest[pid]; }
     isOnline(pid) { const g = this.pidGuest[pid]; return !!(g && g.online); }
     nameOf(pid) { const g = this.pidGuest[pid]; return g ? g.name : ''; }
-    _sendStart(g, pid) { if (!g.online) return; try { g.conn.send(Object.assign({ t: 'start', seat: pid }, this.meta, this.snapshot ? this.snapshot(true) : {})); } catch (e) { /* ok */ } }
+    _sendStart(g, pid) { if (!g.online) return; try {
+        net.sendMsg(g.conn, Object.assign({ t: 'start', seat: pid }, this.meta, this.snapshot ? this.snapshot(true) : {}));
+        // il log fino a ora, a pezzetti di 25 eventi (arriva dopo lo stato: chi rientra ritrova tutta la cronaca)
+        const all = this.logSource ? this.logSource() : [];
+        for (let i = 0; i < all.length; i += 25) net.sendMsg(g.conn, { t: 'log', evs: all.slice(i, i + 25) });
+      } catch (e) { /* ok */ } }
     _rejoin(g) {
       if (!this.started) return;
       const pid = +Object.keys(this.pidGuest).find((k) => this.pidGuest[k] === g);
@@ -97,7 +111,7 @@
     }
     broadcast(msg) {
       const extra = this.snapshot ? this.snapshot(false) : {};
-      for (const pid in this.pidGuest) { const g = this.pidGuest[pid]; if (g.online) { try { g.conn.send(Object.assign({}, msg, extra)); } catch (e) { /* ok */ } } }
+      for (const pid in this.pidGuest) { const g = this.pidGuest[pid]; if (g.online) { try { net.sendMsg(g.conn, Object.assign({}, msg, extra)); } catch (e) { /* ok */ } } }
     }
     ask(pid, d) {
       return new Promise((resolve) => {
@@ -107,15 +121,17 @@
     }
     _sendDecide(pid) {
       const p = this.pending[pid], g = this.pidGuest[pid]; if (!p || !g || !g.online) return;
-      try { g.conn.send(Object.assign({ t: 'decide', id: p.id, d: p.d }, this.snapshot ? this.snapshot(false) : {})); } catch (e) { /* ok */ }
+      try { net.sendMsg(g.conn, Object.assign({ t: 'decide', id: p.id, d: p.d }, this.snapshot ? this.snapshot(false) : {})); } catch (e) { /* ok */ }
     }
     cancel(pid) { const p = this.pending[pid]; if (p) { delete this.pending[pid]; p.resolve(null); } }
-    close() { clearInterval(this.dog); try { for (const g of this.guests) g.conn.close(); this.peer.destroy(); } catch (e) { /* ok */ } }
+    close() { this.dead = true; clearInterval(this.dog); try { for (const g of this.guests) g.conn.close(); this.peer.destroy(); } catch (e) { /* ok */ } }
   }
 
   // ───────────── guest ─────────────
   class Guest {
-    constructor() { this.role = 'guest'; this.q = []; this.waiters = []; this.onLobby = null; this.onStart = null; this.onReject = null; this.onLost = null; this.closed = false; }
+    constructor() { this.role = 'guest'; this.q = []; this.waiters = []; this.onLobby = null; this.onStart = null; this.onReject = null; this.onLost = null; this.closed = false; this.asm = new NC.Assembler(); this.lostFired = false; }
+    // la caduta può essere segnalata più volte (chiusura, errore, battito): la si comunica una volta sola
+    _lost() { if (this.closed || this.lostFired) return; this.lostFired = true; clearInterval(this.dog); if (this.onLost) this.onLost(); }
     connect(code, name) {
       this.code = code; this.name = name;
       return new Promise((resolve, reject) => {
@@ -127,12 +143,12 @@
           this.conn = this.peer.connect(PREFIX + code, { reliable: true, serialization: 'json' });
           this.conn.on('open', () => {
             this.conn.send({ t: 'hello', name }); this.seen = Date.now();
-            this.dog = setInterval(() => { if (this.closed) return; try { this.conn.send({ t: 'ping' }); } catch (e) { /* ok */ } if (Date.now() - this.seen > 14000) { clearInterval(this.dog); if (this.onLost) this.onLost(); } }, 4000);
+            this.dog = setInterval(() => { if (this.closed) return; try { this.conn.send({ t: 'ping' }); } catch (e) { /* ok */ } if (Date.now() - this.seen > 14000) { clearInterval(this.dog); this._lost(); } }, 4000);
             if (!done) { done = true; resolve(); }
           });
-          this.conn.on('data', (m) => this._data(m));
-          this.conn.on('close', () => { if (!this.closed && this.onLost) this.onLost(); });
-          this.conn.on('error', () => { if (!this.closed && this.onLost) this.onLost(); });
+          this.conn.on('data', (m) => { const f = this.asm.push(m); if (f) this._data(f); });
+          this.conn.on('close', () => this._lost());
+          this.conn.on('error', () => this._lost());
         });
         setTimeout(() => fail('Nessuna risposta dalla stanza: controlla il codice e che il tavolo sia aperto.'), 20000);
       });

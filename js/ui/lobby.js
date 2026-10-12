@@ -11,45 +11,59 @@
   const needNet = (box) => { if (UI.net.available()) return true; box.append(h('p', {}, 'Il componente di collegamento non è stato caricato (serve aprire l’app una volta con internet). Riprova più tardi.')); return false; };
 
   // ───────────── chi crea la stanza ─────────────
-  UI.lobbyHost = function () {
+  // `resume` = partita in rete salvata (UI.loadNetSave): si riapre la stanza con lo stesso codice e si riprende dove era
+  UI.lobbyHost = function (resume) {
     if (UI.session) { UI.session.destroy(); }
-    const box = shell('👥 Partita con gli amici — crea la stanza');
+    const rs = resume && resume.players ? resume : null;
+    const box = shell(rs ? '👥 Partita con gli amici — riapri la stanza' : '👥 Partita con gli amici — crea la stanza');
     if (!needNet(box)) return;
     const net = UI.net, host = new net.Host();
-    const st = { n: 3, seats: [], seed: String(Math.floor(Math.random() * 1e6)), name: loadName() || 'Giocatore 1', guests: [], err: '' };
+    UI.netHostObj = host;           // (anche per le prove nel browser)
+    const expected = rs ? rs.seats.filter((s) => s.kind === 'friend').map((s) => s.guest) : [];
+    if (rs) host.allowed = expected;
+    const st = { n: 3, seats: [], seed: String(Math.floor(Math.random() * 1e6)), name: loadName() || 'Giocatore 1', guests: [], err: '', stranger: '', levelDays: AE.DEFAULT_RULES.levelDays.slice() };
     for (let i = 0; i < 6; i++) st.seats.push({ kind: i === 0 ? 'me' : i === 1 ? 'friend' : 'ai', level: 'medium', char: '' });
     const status = h('div', { class: 'small dim' }, 'Mi collego al servizio per aprire la stanza…');
     const codeBox = h('div', { style: 'font-size:2.4em;font-weight:900;letter-spacing:.2em;text-align:center;margin:8px 0' }, '····');
-    const seatsBox = h('div'), friendsBox = h('div', { class: 'small' }), startBtn = h('button', { class: 'btn primary', disabled: true }, '▶ Inizia la partita'), msg = h('div', { class: 'small', style: 'color:#ff9a9a;margin-top:6px' });
+    const seatsBox = h('div'), friendsBox = h('div', { class: 'small' }), startBtn = h('button', { class: 'btn primary', disabled: true }, rs ? '▶ Riprendi la partita' : '▶ Inizia la partita'), msg = h('div', { class: 'small', style: 'color:#ff9a9a;margin-top:6px' });
     const friends = () => st.seats.slice(0, st.n).filter((s) => s.kind === 'friend').length;
     const draw = () => {
-      host.maxGuests = friends();
+      host.maxGuests = rs ? expected.length : friends();
       seatsBox.innerHTML = '';
-      for (let i = 0; i < st.n; i++) {
+      if (!rs) for (let i = 0; i < st.n; i++) {
         const s = st.seats[i];
         const kind = h('select', { onchange: (e) => { s.kind = e.target.value; draw(); } }, h('option', { value: 'me', selected: s.kind === 'me' }, '🙂 Io (questo dispositivo)'), h('option', { value: 'friend', selected: s.kind === 'friend' }, '📱 Amico (altro dispositivo)'), h('option', { value: 'ai', selected: s.kind === 'ai' }, '🤖 AI'));
         const lvl = h('select', { disabled: s.kind !== 'ai', onchange: (e) => { s.level = e.target.value; } }, ...LEVELS.map(([v, n]) => h('option', { value: v, selected: s.level === v }, n)));
         const ch = h('select', { class: 'c3', onchange: (e) => { s.char = e.target.value; } }, h('option', { value: '' }, '🎲 Personaggio a caso'), ...AE.CHARS.map((c) => h('option', { value: c.id, selected: s.char === c.id }, `${c.n} — ${c.role}`)));
         seatsBox.append(h('div', { class: 'seat' }, h('b', { style: `color:${UI.col(i)}` }, '#' + (i + 1)), kind, lvl, ch));
       }
-      const need = friends(), have = st.guests.filter((g) => g.online).length, me = st.seats.slice(0, st.n).filter((s) => s.kind === 'me').length;
+      const need = rs ? expected.length : friends(), me = st.seats.slice(0, st.n).filter((s) => s.kind === 'me').length;
+      const online = (nm) => st.guests.some((g) => g.name === nm && g.online);
+      const have = rs ? expected.filter(online).length : st.guests.filter((g) => g.online).length;
       friendsBox.innerHTML = '';
-      friendsBox.append(h('div', {}, `Amici collegati: ${have} su ${need} richiesti`), ...st.guests.map((g) => h('div', {}, (g.online ? '🟢 ' : '⚪ ') + g.name)));
-      const ok = st.err === '' && me === 1 && have === need && st.guests.length === need;
+      if (rs) friendsBox.append(h('div', {}, `Amici attesi: ${have} su ${need} rientrati`), ...expected.map((nm) => h('div', {}, (online(nm) ? '🟢 ' : '⚪ ') + nm + (online(nm) ? '' : ' (non ancora rientrato)'))));
+      else friendsBox.append(h('div', {}, `Amici collegati: ${have} su ${need} richiesti`), ...st.guests.map((g) => h('div', {}, (g.online ? '🟢 ' : '⚪ ') + g.name)));
+      const ok = st.err === '' && (rs ? have === need : (me === 1 && have === need && st.guests.length === need));
       startBtn.disabled = !ok;
-      msg.textContent = st.err || (me !== 1 ? 'Serve esattamente un posto “Io”.' : have !== need ? 'Aspetto che si colleghino tutti gli amici.' : '');
+      msg.textContent = st.err || (st.stranger && rs ? `🟠 Ha provato a entrare “${st.stranger}”, ma la partita salvata è con: ${expected.join(', ')}. Deve rientrare con uno di questi nomi.` : '') || (!rs && me !== 1 ? 'Serve esattamente un posto “Io”.' : have !== need ? (rs ? 'Aspetto che rientrino tutti gli amici.' : 'Aspetto che si colleghino tutti gli amici.') : '');
     };
     host.onLobby = (list) => { st.guests = list; draw(); };
+    host.onRejected = (nm) => { st.stranger = nm; draw(); };
+    // in ripresa si riusa lo stesso codice: il servizio può tenerlo occupato per qualche secondo dopo la chiusura (riprova ogni 3 s, al massimo 8 volte)
     const open = async (tries) => {
-      const code = net.newCode();
+      const reuse = rs && tries < 8;
+      const code = reuse ? rs.code : net.newCode();
+      if (reuse && tries > 0) { status.textContent = `Il codice ${rs.code} è ancora occupato, riprovo… (${tries}/8)`; await new Promise((r) => setTimeout(r, 3000)); if (host.dead) return; }
       try { await host.open(code); } catch (e) {
-        if (e && e.type === 'unavailable-id' && tries < 4) return open(tries + 1);
+        if (host.dead) return;
+        if (e && e.type === 'unavailable-id' && (reuse || tries < 4)) return open(tries + 1);
         st.err = 'Non riesco ad aprire la stanza (' + ((e && e.type) || 'errore') + '). Serve internet per il collegamento iniziale.'; status.textContent = ''; draw(); return;
       }
-      codeBox.textContent = code;
+      st.err = ''; codeBox.textContent = code;
+      if (rs && code !== rs.code) UI.toast('Il codice vecchio era occupato: comunica agli amici quello nuovo (' + code + ')');
       status.innerHTML = '';
       const link = joinLink(code);
-      status.append(h('div', {}, 'Gli amici aprono la webapp e scelgono “Unisciti a una stanza” con questo codice, oppure aprono questo link:'), h('div', { style: 'word-break:break-all;margin:4px 0' }, link),
+      status.append(h('div', {}, rs ? 'Gli amici rientrano con lo stesso nome (se hanno ancora la partita aperta premono “Riconnetti”), oppure con questo codice o link:' : 'Gli amici aprono la webapp e scelgono “Unisciti a una stanza” con questo codice, oppure aprono questo link:'), h('div', { style: 'word-break:break-all;margin:4px 0' }, link),
         h('div', { class: 'row' }, h('button', { class: 'btn small', onclick: async () => { try { if (navigator.share) await navigator.share({ title: 'Arena Extinctio', text: 'Codice stanza ' + code, url: link }); else { await navigator.clipboard.writeText(link); UI.toast('Link copiato'); } } catch (e) { /* annullato */ } } }, '📤 Condividi il link')));
       draw();
     };
@@ -58,26 +72,37 @@
     const nameIn = h('input', { type: 'text', value: st.name, maxlength: 20, style: 'width:150px', oninput: (e) => { st.name = e.target.value; } });
     const seedIn = h('input', { type: 'text', value: st.seed, style: 'width:120px', oninput: (e) => { st.seed = e.target.value; } });
     startBtn.addEventListener('click', () => {
-      const seats = st.seats.slice(0, st.n);
-      const used = new Set(); for (const s of seats) if (s.char) { if (used.has(s.char)) { msg.textContent = 'Personaggio ripetuto: sceglierne di diversi.'; return; } used.add(s.char); }
-      const names = new Set(); const uniq = (n) => { let x = n, k = 2; while (names.has(x.toLowerCase())) x = n + ' ' + k++; names.add(x.toLowerCase()); return x; };
-      const myName = uniq((st.name || 'Giocatore 1').trim() || 'Giocatore 1'); saveName(myName);
-      const queue = st.guests.slice(); const map = []; let mySeat = 0;
-      const players = seats.map((s, i) => {
-        if (s.kind === 'me') { mySeat = i; return { name: myName, kind: 'human', char: s.char || undefined }; }
-        if (s.kind === 'friend') { const g = queue.shift(); const real = host.guests.find((x) => x.name === g.name); map.push({ guest: real, pid: i }); return { name: uniq(g.name), kind: 'human', char: s.char || undefined }; }
-        return { name: uniq(`AI ${i + 1}`), kind: 'ai', level: s.level, char: s.char || undefined };
-      });
+      let players, mySeat = 0, seed, rules, netSeats, map = [];
+      const startCfg = {};
+      if (rs) {
+        players = rs.players; mySeat = rs.mySeat; seed = rs.seed; rules = rs.rules || {}; netSeats = rs.seats;
+        rs.seats.forEach((s, i) => { if (s.kind === 'friend') map.push({ guest: host.guests.find((x) => x.name === s.guest), pid: i }); });
+        if (map.some((m) => !m.guest || !m.guest.online)) { msg.textContent = 'Non sono rientrati tutti gli amici.'; return; }
+        if (rs.build === AE.BUILD || !rs.snap) startCfg.history = rs.history;       // stesso motore: si rigioca mossa per mossa
+        else { startCfg.resume = rs.snap; UI.toast('Le regole sono state aggiornate dopo il salvataggio: riprendo dall’inizio dell’ultimo turno.'); }
+      } else {
+        const seats = st.seats.slice(0, st.n);
+        const used = new Set(); for (const s of seats) if (s.char) { if (used.has(s.char)) { msg.textContent = 'Personaggio ripetuto: sceglierne di diversi.'; return; } used.add(s.char); }
+        const names = new Set(); const uniq = (n) => { let x = n, k = 2; while (names.has(x.toLowerCase())) x = n + ' ' + k++; names.add(x.toLowerCase()); return x; };
+        const myName = uniq((st.name || 'Giocatore 1').trim() || 'Giocatore 1'); saveName(myName);
+        const queue = st.guests.slice(); netSeats = [];
+        players = seats.map((s, i) => {
+          if (s.kind === 'me') { mySeat = i; netSeats.push({ kind: 'me' }); return { name: myName, kind: 'human', char: s.char || undefined }; }
+          if (s.kind === 'friend') { const g = queue.shift(); const real = host.guests.find((x) => x.name === g.name); map.push({ guest: real, pid: i }); netSeats.push({ kind: 'friend', guest: g.name }); return { name: uniq(g.name), kind: 'human', char: s.char || undefined }; }
+          netSeats.push({ kind: 'ai' });
+          return { name: uniq(`AI ${i + 1}`), kind: 'ai', level: s.level, char: s.char || undefined };
+        });
+        seed = st.seed; rules = { levelDays: st.levelDays.slice() };
+      }
       UI.clearSave();
-      UI.startSession({ seed: st.seed, players, rules: { levelDays: AE.DEFAULT_RULES.levelDays.slice() }, speed: 'manual', net: host, mySeat });
-      const g = UI.session.game;
-      host.begin(map, { seed: st.seed, players, rules: g.rules, code: host.code });
-      UI.session.renderNav();
+      UI.startSession(Object.assign({ seed, players, rules, speed: 'manual', net: host, mySeat, netSeats, onReady: (sess) => { host.begin(map, { seed, players, rules: sess.game.rules, code: host.code }); sess.renderNav(); sess.save(false); } }, startCfg));
     });
-    box.append(h('div', { class: 'small dim' }, 'Codice stanza'), codeBox, status,
-      h('div', { class: 'row', style: 'margin-top:10px' }, h('label', {}, 'Il tuo nome ', nameIn), nsel, h('label', {}, 'Seed ', seedIn)),
-      h('div', { class: 'small dim', style: 'margin-top:8px' }, 'Scegli per ogni posto chi gioca: tu, un amico su un altro dispositivo, oppure l’AI. Gli amici prendono i posti “Amico” nell’ordine in cui si collegano.'),
-      seatsBox, friendsBox, msg, h('div', { class: 'row', style: 'margin-top:12px' }, startBtn, h('button', { class: 'btn', onclick: () => { host.close(); UI.go('home'); } }, 'Annulla')));
+    const pend = !rs && UI.loadNetSave() ? h('div', { class: 'small', style: 'color:#ffcf8a;margin-bottom:8px' }, '⚠ C’è una partita in rete in sospeso: se ne inizi un’altra, quella salvata viene sostituita (per riprenderla usa “Riapri la stanza” dalla home).') : null;
+    box.append(pend, h('div', { class: 'small dim' }, 'Codice stanza'), codeBox, status,
+      rs ? h('div', { style: 'margin:10px 0' }, h('b', {}, 'Partita salvata: '), `${rs.players[rs.mySeat].name} (tu) con ${expected.join(', ')}${rs.players.some((p) => p.kind === 'ai') ? ' e ' + rs.players.filter((p) => p.kind === 'ai').length + ' AI' : ''} · round ${rs.round || '?'}`)
+        : h('div', {}, h('div', { class: 'row', style: 'margin-top:10px' }, h('label', {}, 'Il tuo nome ', nameIn), nsel, h('label', {}, 'Seed ', seedIn)), UI.levelDaysBox(st.levelDays),
+          h('div', { class: 'small dim', style: 'margin-top:8px' }, 'Scegli per ogni posto chi gioca: tu, un amico su un altro dispositivo, oppure l’AI. Gli amici prendono i posti “Amico” nell’ordine in cui si collegano.')),
+      seatsBox, friendsBox, msg, h('div', { class: 'row', style: 'margin-top:12px' }, startBtn, h('button', { class: 'btn', onclick: () => { host.dead = true; host.close(); UI.go('home'); } }, rs ? 'Indietro (il salvataggio resta)' : 'Annulla')));
     draw();
     open(0);
   };

@@ -32,6 +32,11 @@
   UI.homeScreen = function () {
     const el = $('#screen'); el.innerHTML = '';
     const save = UI.loadSave();
+    const ns = UI.loadNetSave();
+    const netCard = ns ? h('div', { class: 'card', style: 'border-color:var(--neon2)' }, h('h3', {}, '📡 Partita in rete in sospeso'),
+      h('p', { class: 'small' }, `${ns.players[ns.mySeat].name} (tu, tavolo) con ${ns.seats.filter((s) => s.kind === 'friend').map((s) => s.guest).join(', ')}${ns.players.some((p) => p.kind === 'ai') ? ' e ' + ns.players.filter((p) => p.kind === 'ai').length + ' AI' : ''} · round ${ns.round || '?'}. Gli amici devono rientrare con lo stesso nome.`),
+      h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: () => UI.safe(() => UI.lobbyHost(ns), 'lobbyHost') }, '▶ Riapri la stanza'),
+        h('button', { class: 'btn warn', onclick: () => UI.modal.open(h('div', {}, h('h3', {}, 'Eliminare la partita in rete?'), h('p', {}, 'Il salvataggio si cancella e non si potrà più riprendere.'), h('div', { class: 'row' }, h('button', { class: 'btn warn', onclick: () => { UI.clearNetSave(); UI.modal.close(); UI.homeScreen(); } }, 'Sì, elimina'), h('button', { class: 'btn', onclick: () => UI.modal.close() }, 'Annulla')))) }, 'Elimina'))) : null;
     // Un salvataggio si rigioca mossa per mossa solo se il motore è lo stesso; altrimenti si riparte dall'inizio del turno salvato.
     const resumeSave = (sv) => {
       const same = sv.build === AE.BUILD;
@@ -58,7 +63,7 @@
     const seed = h('input', { type: 'text', value: state.seed, style: 'width:140px', oninput: (e) => { state.seed = e.target.value; } });
     const rulesBox = h('details', {}, h('summary', {}, '⚙ Parametri delle regole (per gli esperimenti)'), h('div', { class: 'grid', style: 'grid-template-columns:repeat(auto-fill,minmax(230px,1fr));margin-top:8px' },
       ...RULE_FIELDS.map(([k, n]) => h('label', {}, h('span', { style: 'flex:1' }, n), h('input', { type: 'number', value: AE.DEFAULT_RULES[k], style: 'width:80px', oninput: (e) => { state.rules[k] = +e.target.value; } }))),
-      ...[0, 1, 2].map((i) => h('label', {}, h('span', { style: 'flex:1' }, `Giornate prima di togliere il livello ${5 - i}`), h('input', { type: 'number', min: 1, value: state.levelDays[i], style: 'width:80px', oninput: (e) => { state.levelDays[i] = +e.target.value; } })))));
+    ));
     const play = (preset) => {
       const seats = state.seats.slice(0, state.n).map((s, i) => Object.assign({}, s));
       if (preset === 'watch') seats.forEach((s) => { s.kind = 'ai'; });
@@ -73,7 +78,8 @@
     el.append(
       h('div', { class: 'row' }, h('img', { src: 'assets/logo.webp', style: 'height:120px;max-width:100%', alt: 'Arena Extinctio' })),
       h('div', { class: 'grid', style: 'grid-template-columns:repeat(auto-fit,minmax(320px,1fr))' },
-        h('div', { class: 'card' }, h('h3', {}, 'Nuova partita'), h('div', { class: 'row' }, nsel, h('label', {}, 'Seed', seed)), h('div', { class: 'small dim' }, 'Il posto #1 è l’umano (se lo imposti), gli altri sono AI. Con il seed puoi rigiocare la stessa partita.'), seatsBox, rulesBox,
+        netCard,
+        h('div', { class: 'card' }, h('h3', {}, 'Nuova partita'), h('div', { class: 'row' }, nsel, h('label', {}, 'Seed', seed)), h('div', { class: 'small dim' }, 'Il posto #1 è l’umano (se lo imposti), gli altri sono AI. Con il seed puoi rigiocare la stessa partita.'), UI.levelDaysBox(state.levelDays), seatsBox, rulesBox,
           h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn primary', onclick: () => play('vs') }, '▶ Gioca contro l’AI'), h('button', { class: 'btn', onclick: () => play('watch') }, '🍿 AI contro AI (da guardare)'), h('button', { class: 'btn', onclick: () => play('custom') }, 'Parti con i posti scelti'))),
         h('div', { class: 'card' }, h('h3', {}, 'Riprendi'), save && !save.finished ? h('div', {}, h('p', {}, `Partita in corso (seed ${save.cfg.seed}, ${save.cfg.players.length} giocatori, ${save.history.length} decisioni).`), h('div', { class: 'row' }, h('button', { class: 'btn primary', onclick: () => resumeSave(save) }, '⏯ Riprendi'), h('button', { class: 'btn warn', onclick: () => { UI.clearSave(); UI.homeScreen(); } }, 'Scarta il salvataggio'))) : h('p', { class: 'dim' }, 'Nessuna partita da riprendere. Il salvataggio è automatico.'),
           h('h3', { style: 'margin-top:16px' }, '👥 Con gli amici'), h('div', { class: 'small dim' }, 'Più giocatori su dispositivi diversi (tutti i posti che vuoi, gli altri li gioca l’AI).'), h('div', { class: 'row', style: 'margin-top:6px' }, h('button', { class: 'btn primary', onclick: () => UI.safe(() => UI.lobbyHost(), 'lobbyHost') }, '🏠 Crea una stanza'), h('button', { class: 'btn', onclick: () => UI.safe(() => UI.joinScreen(), 'joinScreen') }, '🚪 Unisciti a una stanza')),

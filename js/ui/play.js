@@ -11,6 +11,10 @@
 
   UI.loadSave = () => { try { return JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { return null; } };
   UI.clearSave = () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) { } };
+  // partita in rete: il tavolo salva da sé (chiave a parte: la ripresa locale non cambia)
+  const NET_SAVE_KEY = 'ae-netsave-v1';
+  UI.loadNetSave = () => { try { const s = JSON.parse(localStorage.getItem(NET_SAVE_KEY)); return s && s.players ? s : null; } catch (e) { return null; } };
+  UI.clearNetSave = () => { try { localStorage.removeItem(NET_SAVE_KEY); } catch (e) { } };
 
   // ─────────────────────────────────────────────────────────────
   class Session {
@@ -25,7 +29,7 @@
       const replay = cfg.history ? cfg.history.slice() : [];
       this.net = cfg.net || null;                         // partita in rete: { role: 'host'|'guest', ... } (vedi js/ui/net.js)
       this.isGuest = !!(this.net && this.net.role === 'guest');
-      this.game = new AE.Game({ seed: cfg.seed, players: cfg.players, rules: cfg.rules, beats: true, replay, resume: cfg.resume, keepSnaps: !cfg.review && !this.net });
+      this.game = new AE.Game({ seed: cfg.seed, players: cfg.players, rules: cfg.rules, beats: true, replay, resume: cfg.resume, keepSnaps: !cfg.review && !this.isGuest });
       if (this.isGuest) { this.mode = 'play'; this.view = cfg.mySeat; this.speed = cfg.speed || 'normal'; this.evSeen = 0; }
       else if (this.net) { this.view = cfg.mySeat; this.aiTakeover = {}; }
       this.game.onEvent = (ev) => this.onEvent(ev);
@@ -63,6 +67,7 @@
       for (const k in SPEED_NAMES) sel.append(h('option', { value: k, selected: k === this.speed }, '⏱ ' + SPEED_NAMES[k]));
       nav.append(sel);
       if (this.net) { const on = this.isGuest ? '' : ' · ' + (Object.keys(this.net.pidGuest).filter((k) => this.net.isOnline(+k)).length) + '/' + Object.keys(this.net.pidGuest).length + ' amici online'; nav.append(h('span', { class: 'pill', title: 'Codice della stanza' }, '🌐 ' + this.net.code + on)); }
+      if (this.net && !this.isGuest && !this.cfg.review) add('🚪 Abbandona la partita', () => this.abandonDialog());
       add('📖 Regole', () => UI.rulesModal());
       add('💾 Esporta cronaca', () => this.exportLog());
     }
@@ -80,7 +85,14 @@
 
     // ───────────── salvataggio ─────────────
     save(finished) {
-      if (this.cfg.review || this.net) return;
+      if (this.cfg.review) return;
+      if (this.net) {            // in rete salva solo il tavolo
+        if (this.isGuest) return;
+        const g = this.game;
+        if (finished || g.s.over) return UI.clearNetSave();
+        try { localStorage.setItem(NET_SAVE_KEY, JSON.stringify({ v: 1, build: AE.BUILD, seed: this.cfg.seed, players: this.cfg.players, rules: this.cfg.rules || {}, history: g.history, snap: g.snap || null, mySeat: this.cfg.mySeat, seats: this.cfg.netSeats, code: this.net.code, round: g.s.round, ts: Date.now() })); } catch (e) { /* spazio finito o salvataggio non disponibile */ }
+        return;
+      }
       try { localStorage.setItem(SAVE_KEY, JSON.stringify({ cfg: { seed: this.cfg.seed, players: this.cfg.players, rules: this.cfg.rules, speed: this.speed }, history: this.game.history, build: AE.BUILD, snap: this.game.snap || null, notes: this.notes, finished: !!finished, ts: Date.now() })); } catch (e) { }
     }
 
@@ -91,6 +103,7 @@
       let r = gen.next();
       while (!r.done) {
         if (this.aborted) return;
+        if (!this.readyFired && !g.replay.length) { this.readyFired = true; if (this.cfg.onReady) this.cfg.onReady(this); }   // la ripresa è arrivata al punto salvato
         const d = r.value;
         if (d.type === 'beat') { await this.showBeat(d.ev); r = gen.next(); continue; }
         const p = g.s.players[d.pid];
@@ -116,7 +129,7 @@
     async showBeat(ev) {
       const g = this.game, A = UI.anim;
       const skip = () => { A.takeMoves(); };
-      if (this.net && !this.isGuest) this.net.broadcast({ t: 'beat', ev });
+      if (this.net && !this.isGuest && !g.replay.length) this.net.broadcast({ t: 'beat', ev });   // durante la ripresa non si mandano le mosse già fatte
       if (this.isGuest && this.net.q.length && ev.k !== 'end') return skip();        // sono indietro: salto i messaggi
       if (g.replay.length && !this.cfg.review) return skip();           // ripresa: niente messaggi
       const always = ALWAYS_CLICK.includes(ev.k);
@@ -164,11 +177,16 @@
     // ───────────── partita in rete ─────────────
     setupHostNet() {
       const net = this.net, g = this.game;
-      net.snapshot = (full) => ({ s: g.s, evs: g.events.slice(full ? -300 : -60) });
+      net.snapshot = (full) => ({ s: g.s, evs: full ? [] : g.events.slice(-60) });
+      net.logSource = () => g.events.slice(-300);
       net.onOffline = (pid, guest) => this.offlineDialog(pid, guest);
       net.onBack = (pid) => { this.offlineOpen = false; UI.toast(`${this.game.s.players[pid].name} è tornato in partita`); UI.modal.close(); this.refresh(); };
       net.onLobby = () => this.renderNav();
       UI.net.keepAwake();
+    }
+    abandonDialog() {
+      UI.modal.open(h('div', {}, h('h3', {}, '🚪 Abbandonare la partita?'), h('p', {}, 'La partita in rete finisce per tutti e il salvataggio viene cancellato. Per uscire senza perderla usa “Menu”: potrai riaprire la stanza dalla home.'),
+        h('div', { class: 'row' }, h('button', { class: 'btn warn', onclick: () => { UI.modal.close(); UI.clearNetSave(); UI.go('home'); } }, 'Sì, abbandona e cancella'), h('button', { class: 'btn', onclick: () => UI.modal.close() }, 'Annulla'))));
     }
     offlineDialog(pid, guest) {
       const name = this.game.s.players[pid].name;
@@ -195,14 +213,14 @@
           if (this.aborted) return;
           net.send({ t: 'ans', id: m.id, i });
         } else if (m.t === 'end') { this.refresh(); this.endScreen(); return; }
-        else this.refresh();
+        else if (m.t !== 'log') this.refresh();
       }
     }
     applyRemote(m) {
       const g = this.game;
       if (m.s) g.s = m.s;
       for (const ev of (m.evs || [])) if (ev.i >= g.events.length) { g.events[ev.i] = ev; this.onEvent(ev); }
-      g.result = m.s && m.s.over ? { winner: m.s.winner, why: '', rounds: m.s.round, turns: m.s.turnNo } : null;
+      if (m.s) g.result = m.s.over ? { winner: m.s.winner, why: '', rounds: m.s.round, turns: m.s.turnNo } : null;
     }
     lostDialog() {
       if (this.lostOpen) return; this.lostOpen = true;
@@ -325,7 +343,7 @@
     humanDecision(d) {
       return new Promise((resolve) => {
         const g = this.game;
-        this.choiceResolve = (i) => { this.choiceResolve = null; this.sel = null; this.path = null; this.onCell = null; this.onHover = null; this.hintBox = null; $('#actionPanel').innerHTML = ''; resolve(i); };
+        this.choiceResolve = (i) => { this.choiceResolve = null; this.sel = null; this.path = null; this.onCell = null; this.onHover = null; this.hintBox = null; const ap = $('#actionPanel'); if (ap) ap.innerHTML = ''; resolve(i); };
         const done = (i) => { this.choiceResolve(i); };
         const panel = $('#actionPanel'); panel.innerHTML = '';
         const pid = d.pid;
