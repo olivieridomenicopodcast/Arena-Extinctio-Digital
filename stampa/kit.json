@@ -1,0 +1,38 @@
+{
+ "cards": 207,
+ "realCards": 199,
+ "refCards": 8,
+ "byGroup": {
+  "Materiali": 75,
+  "Skill": 47,
+  "Armi e Progetti": 61,
+  "Armi Base": 6,
+  "Personaggi": 10,
+  "Riferimento": 8
+ },
+ "sheetsCards": 23,
+ "pagesFrontBack": 46,
+ "tiles": 61,
+ "sheetsTiles": 6,
+ "playerBoards": 6,
+ "cardMm": [
+  63.5,
+  88.9
+ ],
+ "slotMm": [
+  66,
+  91
+ ],
+ "decks": {
+  "mat": 75,
+  "skill": 47,
+  "proj": 61,
+  "base": 6,
+  "chars": 10
+ },
+ "cum": [
+  10,
+  18,
+  24
+ ]
+}
