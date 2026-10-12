@@ -275,6 +275,7 @@
           const cur = p.armor ? armorV(p.armor) : 0; return armorV({ id: x, dur: AE.ARMORS[x].dur }) - cur + 0.5 - 0.3;
         }
         case 'heal': { const n = AE.MATERIALS[o.card.slice(4)].heal; const miss = R.healthCap - p.hp; if (miss < Math.min(n, 2)) return -1; return Math.min(n, miss) * 0.9 - 0.4 + (p.hp <= 4 ? 1.5 : 0); }
+        case 'sell': return -3;      // l'AI non rivende mai
         case 'buyhp': return (p.hp <= 5 ? 2.6 : p.hp <= 7 ? 1.2 : 0.2) - o.price * 0.2 - 0.3;
         case 'buyammo': { const w = p.weapons[o.slot]; const st = g.weaponStats(pid, o.slot); return (w.ammo === 0 ? 2.4 : w.ammo === 1 ? 0.9 : 0.1) * Math.min(1.5, wv(w.id, w.mod) / 3) - o.price * 0.15 - 0.2; }
         case 'buy': {

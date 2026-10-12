@@ -326,7 +326,7 @@
       const $$ = UI.$$;
       const groups = [['attack', '⚔ Attaccare'], ['craft', '⚒ Crafting'], ['skill', '🃏 Skill'], ['heal', '💚 Curarsi'], ['buy', '🛒 Mercato'], ['ulti', '⚡ Ulti']];
       for (const [kind, title] of groups) {
-        const kinds = kind === 'buy' ? ['buy', 'buyhp', 'buyammo'] : [kind];
+        const kinds = kind === 'buy' ? ['buy', 'buyhp', 'buyammo', 'sell'] : [kind];
         const items = d.options.map((o, i) => [o, i]).filter(([o]) => kinds.includes(o.kind));
         const dis = cat.disabled.filter((o) => kinds.includes(o.kind));
         if (!items.length && !dis.length) continue;

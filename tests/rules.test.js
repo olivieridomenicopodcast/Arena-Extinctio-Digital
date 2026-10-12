@@ -372,6 +372,18 @@ test('tessera Equipaggiamento: la ricarica vale per UNA sola arma scelta', () =>
   assert.strictEqual(n, 2, 'una scelta per ogni arma scarica');
   assert.strictEqual(p.weapons.primary.ammo, 2); assert.strictEqual(p.weapons.secondary.ammo, 0);
 });
+test('mercato: si vendono cubetti e carte da craftare a 1 moneta l’uno', () => {
+  const g = mk(2); const p = g.pl(0); prep(g, 0);
+  p.cubes.V = 2; p.projects = ['w:cratter']; p.coins = 0;
+  const so = g.buyOptions(0).filter((o) => o.kind === 'sell');
+  assert.strictEqual(so.length, 2, 'un cubetto (Vetro) e un progetto');
+  drive(g.doSell(0, so.find((o) => o.what === 'cube')));
+  drive(g.doSell(0, so.find((o) => o.what === 'proj')));
+  assert.strictEqual(p.cubes.V, 1); assert.strictEqual(p.projects.length, 0); assert.strictEqual(p.coins, 2);
+  assert.ok(g.s.discard.proj.includes('w:cratter'));
+  p.mana = 0; p.coins = 0; p.cubes.U = 1; assert.ok(g.buyOptions(0).some((o) => o.kind === 'sell'), 'vendere non costa mana');
+  p.coins = 10; assert.strictEqual(g.buyOptions(0).filter((o) => o.kind === 'sell').length, 0, 'a 10 monete (massimo) non conviene vendere');
+});
 test('display: dopo un acquisto si rimpiazza dal mazzo', () => {
   const g = mk(2); const before = g.s.display.mat;
   drive(g.takeDisplay(0, 'mat'));

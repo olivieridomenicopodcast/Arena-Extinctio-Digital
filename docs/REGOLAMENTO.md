@@ -191,7 +191,7 @@ Per craftare un **progetto** servono le risorse indicate sulla carta e **1 mana*
 | Armi e Progetti | 2 monete | 3 monete |
 | Skill | 3 monete | 4 monete |
 
-Inoltre: **3 monete = +1 PV**, **2 monete = +1 munizione** (1 mana ciascuno). Monete massime: 10.
+Inoltre: **3 monete = +1 PV**, **2 monete = +1 munizione** (1 mana ciascuno). **Vendita** [chiarito]: al mercato puoi rivendere i **materiali** (cubetti di Vetro, Uranio, Minerale) e le **carte da craftare** (progetti di armi, armature e Mod) a **1 moneta l'uno**; le carte vendute vanno negli scarti, i cubetti tornano alla banca. [interpretazione: vendere non costa mana; Cibo, Medikit e Skill non si vendono] Monete massime: 10.
 
 ## 10. Eliminazione, bottino, rientri, Fastidio
 
@@ -248,6 +248,7 @@ Questi valori stanno in un unico oggetto (`AE.DEFAULT_RULES`); un test controlla
 | rifugioCoins | 1 |
 | ammoPrice | 2 |
 | hpPrice | 3 |
+| sellPrice | 1 |
 | trapHp | 4 |
 | turretDmg | 2 |
 | punchDamage | 1 |

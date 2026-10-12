@@ -179,7 +179,7 @@
     attackCost: { base: [0, 1], std: [1, 2], adv: [1, 3] },
     ultiMana: 3, craftMana: 1, skillMana: 1, buyMana: 1, healMana: 1,
     price: { mat: [2, 3], proj: [2, 3], skill: [3, 4] },   // [dal mazzo coperto, dal display]
-    ammoPrice: 2, hpPrice: 3,
+    ammoPrice: 2, hpPrice: 3, sellPrice: 1,
     killCoins: 3, killMinCoins: 2, luogoCoins: 2, rifugioCoins: 1, discardCoin: 1,
     trapHp: 4, turretDmg: 2,
     inv: { skill: 2, special: 2, heal: 2, project: 1 },

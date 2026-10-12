@@ -282,19 +282,32 @@
   // ───────────── mercato ─────────────
   G.buyOptions = function (pid) {
     const p = this.pl(pid), R = this.rules, s = this.s, out = [];
-    if (p.mana < R.buyMana) return out;
+    const canBuy = p.mana >= R.buyMana;
     const names = { mat: 'Materiali', skill: 'Skill', proj: 'Armi e Progetti' };
-    for (const d of ['mat', 'skill', 'proj']) {
+    for (const d of canBuy ? ['mat', 'skill', 'proj'] : []) {
       const [pd, pi] = R.price[d];
       if (p.coins >= pd && (s.decks[d].length || s.discard[d].length)) out.push({ kind: 'buy', deck: d, from: 'deck', price: pd, label: `Compra dal mazzo ${names[d]} (${pd} 🪙)` });
       if (s.display[d] && p.coins >= pi) out.push({ kind: 'buy', deck: d, from: 'display', price: pi, card: s.display[d], label: `Compra dal display: ${AE.cardName(s.display[d])} (${pi} 🪙)` });
     }
-    if (p.hp < R.healthCap && p.coins >= R.hpPrice) out.push({ kind: 'buyhp', price: R.hpPrice, label: `Compra 1 PV (${R.hpPrice} 🪙)` });
-    if (p.coins >= R.ammoPrice) for (const slot of ['primary', 'secondary', 'melee']) {
+    if (canBuy && p.hp < R.healthCap && p.coins >= R.hpPrice) out.push({ kind: 'buyhp', price: R.hpPrice, label: `Compra 1 PV (${R.hpPrice} 🪙)` });
+    if (canBuy && p.coins >= R.ammoPrice) for (const slot of ['primary', 'secondary', 'melee']) {
       const w = p.weapons[slot]; if (!w) continue;
       if (w.ammo < this.weaponStats(pid, slot).cap) out.push({ kind: 'buyammo', slot, price: R.ammoPrice, label: `Compra 1 munizione per ${AE.WEAPONS[w.id].n} (${R.ammoPrice} 🪙)` });
     }
+    // vendita: i materiali (cubetti) e le carte da craftare (progetti) si rivendono al mercato a 1 moneta l'uno, senza mana [interpretazione sul mana]
+    if (p.coins < R.coinsMax) {
+      for (const x of AE.RES_KEYS) if (p.cubes[x] > 0) out.push({ kind: 'sell', what: 'cube', res: x, price: R.sellPrice, label: `Vendi 1 cubetto di ${AE.RES[x].s} (+${R.sellPrice} 🪙)` });
+      for (const c of new Set(p.projects)) out.push({ kind: 'sell', what: 'proj', card: c, price: R.sellPrice, label: `Vendi ${AE.cardName(c)} (+${R.sellPrice} 🪙)` });
+    }
     return out;
+  };
+  G.doSell = function* (pid, o) {
+    const p = this.pl(pid), R = this.rules;
+    if (o.what === 'cube') p.cubes[o.res]--; else this._dropCard(pid, o.card);
+    p.coins = Math.min(R.coinsMax, p.coins + o.price);
+    this.stat('sells', pid);
+    const b = this.say('buy', `💰 ${this.pn(pid)} vende ${o.what === 'cube' ? `1 cubetto di ${AE.RES[o.res].s}` : AE.cardName(o.card)} per ${o.price} moneta (${p.coins} 🪙).`, pid);
+    if (b) yield b;
   };
   G.doBuy = function* (pid, o) {
     const p = this.pl(pid), R = this.rules;
@@ -563,6 +576,7 @@
       case 'skill': yield* this.doSkill(pid, o); break;
       case 'heal': yield* this.doHeal(pid, o); break;
       case 'buy': case 'buyhp': case 'buyammo': yield* this.doBuy(pid, o); break;
+      case 'sell': yield* this.doSell(pid, o); break;
       case 'ulti': yield* this.useUlti(pid); break;
       default: break;
     }
