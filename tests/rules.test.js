@@ -581,11 +581,20 @@ test('regola dei rifugi (default): il turno dopo essere stato in un rifugio non 
 
 test('pugno: il 1° del turno è gratis, poi 1, 2, 3 mana (come le armi base); si azzera al turno dopo', () => {
   const g = mk(2, { layout: layout() });
-  place(g, 0, 0, 0); place(g, 1, 0, 0); prep(g, 0);
+  place(g, 0, 0, 0); place(g, 1, 0, 0); prep(g, 0); g.s.removedLevels = 3;   // il pugno c'è solo coi livelli 1–2
   const p = g.pl(0), st = g.weaponStats(0, 'fist');
   assert.deepStrictEqual([0, 1, 2, 3].map((k) => { p.turn.atk.fist = k; return g.attackCost(0, st); }), [0, 1, 2, 3]);
   p.turn.atk.fist = 0; p.mana = 4;
   const n = () => g.attackOptions(0).filter((o) => o.slot === 'fist' && !o.vant).length;
   let made = 0; while (n() && made < 20) { const o = g.attackOptions(0).find((x) => x.slot === 'fist' && !x.vant); p.mana -= o.cost; p.turn.atk.fist = (p.turn.atk.fist || 0) + 1; made++; }
   assert.strictEqual(made, 3, 'con 4 mana: 0 + 1 + 2 = 3 pugni');
+});
+
+test('pugno: disponibile solo quando restano i livelli 1 e 2 (punchLevels = 2); prima no', () => {
+  const g = mk(2, { layout: layout() });
+  place(g, 0, 0, 0); place(g, 1, 0, 0); prep(g, 0);
+  for (const [rem, ok] of [[0, false], [1, false], [2, false], [3, true]]) { g.s.removedLevels = rem; assert.strictEqual(g.attackOptions(0).some((o) => o.slot === 'fist'), ok, 'livelli rimossi: ' + rem); }
+  g.s.removedLevels = 0; assert.ok(g.actionCatalog(0).disabled.some((o) => o.kind === 'attack' && o.slot === 'fist' && /livelli 1–2/.test(o.reason)), 'spiega perché non c’è');
+  const h = mk(2, { layout: layout(), rules: { punchLevels: 5 } }); place(h, 0, 0, 0); place(h, 1, 0, 0); prep(h, 0);
+  assert.ok(h.attackOptions(0).some((o) => o.slot === 'fist'), 'con punchLevels = 5 il pugno è sempre disponibile (esperimenti)');
 });

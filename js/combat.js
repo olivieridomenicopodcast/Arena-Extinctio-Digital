@@ -76,6 +76,8 @@
   };
   G.inShelter = function (pid) { const p = this.pl(pid); return !!p.at && AE.tile(p.at).type === 'rifugio'; };
 
+  // il pugno si usa solo quando restano al massimo `punchLevels` livelli di mappa (di base i livelli 1–2)
+  G.punchAllowed = function () { return 5 - this.s.removedLevels <= this.rules.punchLevels; };
   // opzioni di attacco disponibili ora
   G.attackOptions = function (pid) {
     const p = this.pl(pid), out = [];
@@ -84,6 +86,7 @@
     for (const slot of slots) {
       const st = this.weaponStats(pid, slot); if (!st) continue;
       if (st.ammo < 1) continue;
+      if (slot === 'fist' && !this.punchAllowed()) continue;
       if (slot === 'fist' && this.rules.punchMax > 0 && (p.turn.atk.fist || 0) >= this.rules.punchMax) continue;
       const cost = this.attackCost(pid, st);
       if (cost > p.mana) continue;

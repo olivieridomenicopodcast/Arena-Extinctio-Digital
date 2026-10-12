@@ -114,7 +114,7 @@ Il costo dipende dal numero di attacchi **con la stessa arma nel turno corrente*
 Con 4 mana una standard fa al massimo 2 attacchi; una avanzata può fare il 2° attacco solo con il mana extra della **Sfera di Energia** (5 mana). Non esiste un terzo attacco con l'avanzata. [chiarito]
 
 ### 8.4 Pugno
-Gittata 0, danno 1, munizioni infinite. Il costo in mana cresce a ogni pugno **nello stesso turno**: il 1° è **gratis**, il 2° costa **1 mana**, il 3° **2**, il 4° **3** e così via (come le armi base; si azzera al turno dopo). Se perdi la sfida subisci 1 danno. [chiarito]
+**Il pugno è disponibile solo quando restano i livelli 1 e 2 della mappa** (cioè dopo che sono spariti i livelli 5, 4 e 3) [chiarito]: prima bisogna armarsi. Gittata 0, danno 1, munizioni infinite. Il costo in mana cresce a ogni pugno **nello stesso turno**: il 1° è **gratis**, il 2° costa **1 mana**, il 3° **2**, il 4° **3** e così via (come le armi base; si azzera al turno dopo). Se perdi la sfida subisci 1 danno. [chiarito]
 Con 4 mana si fanno al massimo 3 pugni a turno (costi 0 + 1 + 2). Prima il pugno era gratuito e illimitato, e un'AI poteva darne decine in un turno: la regola è stata cambiata da Niky. Il parametro `punchMax` (0 = nessun tetto oltre al mana) resta per gli esperimenti.
 
 ### 8.5 Armi
@@ -255,6 +255,7 @@ Questi valori stanno in un unico oggetto (`AE.DEFAULT_RULES`); un test controlla
 | punchDamage | 1 |
 | punchFail | 1 |
 | punchMax | 0 |
+| punchLevels | 2 |
 | shelterLimit | 1 |
 | lootSellAll | 5 |
 | lootSellRest | 2 |

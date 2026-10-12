@@ -208,12 +208,12 @@
         for (const t of ts) { const q = g.pl(t.pid); const pw = AI.pWin(false, t.dist === 0 && st.git >= 1, t.dist === 0 && st.git >= 1, false); opp = Math.max(opp, st.dan * pw * (q.hp <= st.dan ? 1.8 : 1) * (t.dist === 0 && st.git >= 1 ? 0.7 : 1)); }
       }
       // pugno sullo stesso piano: solo se nient'altro
-      if (!opp && p.mana >= 0) { for (const q of s.players) if (q.id !== pid && q.status === 'alive' && q.at === tid && !g.inShelter(q.id)) opp = Math.max(opp, 0.4); }
+      if (!opp && p.mana >= 0 && g.punchAllowed()) { for (const q of s.players) if (q.id !== pid && q.status === 'alive' && q.at === tid && !g.inShelter(q.id)) opp = Math.max(opp, 0.4); }
       p.at = saved;
       v += opp * P.aggr * 0.9;
       if (P.hunt) {   // caccia: avvicinarsi ai bersagli esposti, soprattutto se feriti (se si ha un'arma)
         const armed = ['primary', 'secondary', 'melee'].some((sl) => p.weapons[sl] && p.weapons[sl].ammo > 0);
-        for (const q of s.players) { if (q.id === pid || q.status !== 'alive' || g.inShelter(q.id)) continue; const dd = dq(g, o.cell, q); if (dd <= 7) v += P.hunt * ((8 - dd) / 8) * (q.hp <= 5 ? 1.4 : 1) * (armed ? 1 : 0.3); }
+        for (const q of s.players) { if (q.id === pid || q.status !== 'alive' || g.inShelter(q.id)) continue; const dd = dq(g, o.cell, q); if (dd <= 7) v += P.hunt * ((8 - dd) / 8) * (q.hp <= 5 ? 1.4 : 1) * (armed ? 1 : g.punchAllowed() ? 0.3 : 0.05); }
       }
       // restare vicino al centro quando i livelli esterni stanno per sparire, avvicinarsi agli avversari quando si è forti
       const lvl = AE.CELLS[o.cell].level;

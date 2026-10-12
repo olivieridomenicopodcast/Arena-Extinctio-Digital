@@ -184,7 +184,7 @@
     trapHp: 4, turretDmg: 2,
     inv: { skill: 2, special: 2, heal: 2, project: 1 },
     skillStealOnKill: 1,
-    punchDamage: 1, punchFail: 1, punchMax: 0,   // punchMax: pugni massimi per turno (0 = illimitati, come da regolamento)
+    punchDamage: 1, punchFail: 1, punchMax: 0, punchLevels: 2,   // punchMax: pugni massimi per turno (0 = illimitati, come da regolamento)
     lootSellAll: 5, lootSellRest: 2,   // rivendita del bottino al giocatore che rientra
     shelterLimit: 1,                    // dopo N turni di fila finiti in un Rifugio il movimento successivo non può finire in un Rifugio (0 = nessun limite)
     maxRounds: 400,
