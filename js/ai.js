@@ -398,7 +398,7 @@
         }
         case 'equip': return argmax((o) => {
           const p = g.pl(pid);
-          if (o.act === 'ammo') return o.n * 0.9;
+          if (o.act === 'ammo') return o.n * (0.5 + wv(o.id.slice(2)) * 0.15);
           if (o.act === 'heal') return Math.min(2, g.rules.healthCap - p.hp) * (p.hp <= 5 ? 1.6 : 1) + 0.3;
           const cur = p.weapons[o.slot]; return wv(o.id.slice(2)) * 1.2 + 1 - (cur ? wv(cur.id) : 0);
         });

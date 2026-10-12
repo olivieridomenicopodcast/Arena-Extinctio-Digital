@@ -362,6 +362,16 @@ test('tessera Equipaggiamento: una sola cosa fra arma base, munizioni al massimo
   drive(g2.activateEquip(0, AE.tile(45)), (d) => d.options.findIndex((o) => o.act === 'heal'));
   assert.strictEqual(g2.pl(0).hp, 7);
 });
+test('tessera Equipaggiamento: la ricarica vale per UNA sola arma scelta', () => {
+  const g = mk(2, { layout: layout({ [at(0, 0)]: 45 }) });
+  place(g, 0, 0, 0); prep(g, 0);
+  const p = g.pl(0);
+  p.weapons.primary = { id: 'cratter', ammo: 0, mod: null }; p.weapons.secondary = { id: 'softlyne', ammo: 0, mod: null };
+  let n = 0;
+  drive(g.activateEquip(0, AE.tile(45)), (d) => { n = d.options.filter((o) => o.act === 'ammo').length; return d.options.findIndex((o) => o.act === 'ammo' && o.slot === 'primary'); });
+  assert.strictEqual(n, 2, 'una scelta per ogni arma scarica');
+  assert.strictEqual(p.weapons.primary.ammo, 2); assert.strictEqual(p.weapons.secondary.ammo, 0);
+});
 test('display: dopo un acquisto si rimpiazza dal mazzo', () => {
   const g = mk(2); const before = g.s.display.mat;
   drive(g.takeDisplay(0, 'mat'));

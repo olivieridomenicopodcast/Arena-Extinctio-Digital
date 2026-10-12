@@ -24,9 +24,9 @@
     st.light = light;
     return st;
   };
-  G.refillAmmo = function (pid) {
+  G.refillAmmo = function (pid, only) {      // `only` = slot dell'unica arma da ricaricare (omesso = tutte)
     const p = this.pl(pid); let n = 0;
-    for (const slot of ['primary', 'secondary', 'melee']) {
+    for (const slot of only ? [only] : ['primary', 'secondary', 'melee']) {
       const w = p.weapons[slot]; if (!w) continue;
       const cap = this.weaponStats(pid, slot).cap;
       if (w.ammo < cap) { n += cap - w.ammo; w.ammo = cap; }

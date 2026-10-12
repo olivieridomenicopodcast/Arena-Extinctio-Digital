@@ -146,8 +146,11 @@
       if (cur && cur.id === id.slice(2)) continue;
       opts.push({ act: 'weapon', id, slot: w.slot, label: `Prendere l’arma base ${w.n}${cur ? ` (al posto di ${AE.WEAPONS[cur.id].n})` : ''}` });
     }
-    const missing = ['primary', 'secondary', 'melee'].reduce((n, sl) => { const w = p.weapons[sl]; return n + (w ? Math.max(0, this.weaponStats(pid, sl).cap - w.ammo) : 0); }, 0);
-    if (t.ammo && missing > 0) opts.push({ act: 'ammo', n: missing, label: `Ricaricare le munizioni al massimo (+${missing})` });
+    if (t.ammo) for (const sl of ['primary', 'secondary', 'melee']) {
+      const w = p.weapons[sl]; if (!w) continue;
+      const miss = this.weaponStats(pid, sl).cap - w.ammo;
+      if (miss > 0) opts.push({ act: 'ammo', slot: sl, id: 'w:' + w.id, n: miss, label: `Ricaricare ${AE.WEAPONS[w.id].n} al massimo (+${miss})` });
+    }
     if (t.heal && p.hp < this.rules.healthCap) opts.push({ act: 'heal', label: `Usare il medikit (+${Math.min(2, this.rules.healthCap - p.hp)} PV)` });
     if (!opts.length) return;
     const o = yield* this.choose(pid, 'equip', 'Tessera Equipaggiamento: puoi fare UNA sola cosa', opts, { force: true });
@@ -158,8 +161,8 @@
       p.weapons[w.slot] = { id: o.id.slice(2), ammo: 0, mod: null }; p.weapons[w.slot].ammo = this.weaponStats(pid, w.slot).cap;
       b = this.say('gain', `🔫 ${this.pn(pid)} prende l’arma base ${w.n}.`, pid); if (b) yield b;
     } else if (o.act === 'ammo') {
-      const n = this.refillAmmo(pid);
-      if (n) { b = this.say('gain', `🔋 ${this.pn(pid)} ricarica ${n} munizioni.`, pid); if (b) yield b; }
+      const n = this.refillAmmo(pid, o.slot);
+      if (n) { b = this.say('gain', `🔋 ${this.pn(pid)} ricarica ${AE.WEAPONS[p.weapons[o.slot].id].n}: +${n} munizioni.`, pid); if (b) yield b; }
     } else if (o.act === 'heal') {
       const n = this.heal(pid, 2);
       if (n) { b = this.say('heal', `💚 ${this.pn(pid)} recupera ${n} PV.`, pid, { n }); if (b) yield b; }

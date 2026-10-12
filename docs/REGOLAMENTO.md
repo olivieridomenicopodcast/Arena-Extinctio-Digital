@@ -79,7 +79,7 @@ Muoversi e attivare la tessera sono gratis. Le **Skill/effetti di carta** costan
 |---|---|
 | Luogo (6) | Partenza e rientro. +2 monete a ogni cambio giornata a chi ci sta sopra. |
 | Rifugio (5) | Nessun attacco (né da lì né contro chi c'è) e nessun danno dagli altri. +1 moneta a ogni cambio giornata. |
-| Equipaggiamento (9) | Fermandoti scegli **UNA sola** di queste cose: prendere un'arma base raffigurata sulla tessera, oppure **munizioni al massimo** su tutte le armi, oppure **+2 PV** col medikit (se raffigurato). [chiarito] |
+| Equipaggiamento (9) | Fermandoti scegli **UNA sola** di queste cose: prendere un'arma base raffigurata sulla tessera, oppure **munizioni al massimo** per **una sola arma a scelta**, oppure **+2 PV** col medikit (se raffigurato). [chiarito] |
 | Carte (12) | Gratis, niente mana: peschi **2 carte coperte** (a scelta di mazzo) **oppure** prendi **1 carta dal display**. |
 | Ulti (6) | Solo il proprietario ci raccoglie la sua Ulti, fermandosi. |
 | Teletrasporto (5) | 2 × A, 2 × B, 1 doppio. Obbligatorio. I proiettili **non** si teletrasportano. |
